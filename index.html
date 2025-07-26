@@ -62,7 +62,8 @@
         body.projection-mode #lang-selector-container,
         body.projection-mode .info-box,
         body.projection-mode #projection-btn,
-        body.projection-mode .role-switch-link {
+        body.projection-mode .role-switch-link,
+        body.projection-mode footer { /* Ocultar también el pie de página */
             display: none;
         }
         body.projection-mode #results-view .results-content {
@@ -208,6 +209,12 @@
         </div>
     </div>
     
+    <footer class="text-center py-4 text-sm text-gray-500">
+        Aplicación creada por <a href="https://bilateria.org" target="_blank" class="underline hover:text-gray-700">Juan José de Haro</a>
+        <br>
+        <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="license" class="underline hover:text-gray-700">Creative Commons Reconocimiento-CompartirIgual 4.0 Internacional</a>
+    </footer>
+
     <div id="toast" class="fixed bottom-5 right-5 bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg opacity-0 transition-opacity duration-300">
     </div>
 
