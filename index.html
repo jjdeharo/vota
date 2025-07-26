@@ -130,14 +130,23 @@
                     <div class="info-box lg:w-1/2 xl:w-2/5 lg:flex-shrink-0 bg-green-50 border border-green-200 p-4 rounded-md mb-6 lg:mb-0 flex flex-col">
                         <p class="font-bold text-center mb-4 text-green-800" data-translate-key="live_session_title">¡Sesión en vivo! Comparte:</p>
                         <div class="flex flex-col items-center justify-center flex-grow gap-y-4">
+                            
                             <div class="text-center w-full">
-                                <p class="text-sm" data-translate-key="scan_qr_label">Escaneando el QR</p>
+                                <p class="text-sm" data-translate-key="scan_qr_label">1. Escanea el QR</p>
                                 <div id="qrcode-container" class="mt-2 w-full max-w-xs mx-auto"></div>
                             </div>
-                            <div class="text-center">
-                                <p class="text-sm" data-translate-key="or_go_to_label">O yendo a:</p>
-                                <p id="app-url" class="font-mono bg-gray-200 px-2 py-1 rounded text-sm my-1 break-all"></p>
-                                <p class="text-sm mt-2" data-translate-key="and_enter_code_label">e introduciendo el código:</p>
+                            
+                            <div class="text-center w-full border-t border-gray-200 pt-4 mt-4">
+                                <p class="text-sm" data-translate-key="direct_link_label">2. O comparte este enlace directo:</p>
+                                <a id="direct-session-link" href="#" target="_blank" title="Haz clic para copiar" class="font-mono bg-gray-200 px-2 py-1 rounded text-sm my-1 break-all hover:bg-gray-300 inline-block max-w-full truncate" onclick="copyUrl(event)"></a>
+                            </div>
+
+                            <div class="text-center w-full border-t border-gray-200 pt-4 mt-4">
+                                <p class="text-sm">
+                                    <span data-translate-key="or_enter_code_label_1">3. O ve a</span>
+                                    <a id="app-url" href="#" target="_blank" class="font-mono underline"></a>
+                                    <span data-translate-key="or_enter_code_label_2"> e introduce el código:</span>
+                                </p>
                                 <span id="session-code" class="text-2xl font-bold bg-white px-3 py-2 mt-1 inline-block rounded-md shadow-sm cursor-pointer" onclick="copyCode()"></span>
                             </div>
                         </div>
@@ -217,9 +226,10 @@
                 'prepare_session_btn': 'Preparar sesión',
                 'start_session_btn': 'Iniciar Sesión',
                 'live_session_title': '¡Sesión en vivo! Comparte:',
-                'scan_qr_label': 'Escaneando el QR',
-                'or_go_to_label': 'O yendo a:',
-                'and_enter_code_label': 'e introduciendo el código:',
+                'scan_qr_label': '1. Escanea el QR',
+                'direct_link_label': '2. O comparte este enlace directo:',
+                'or_enter_code_label_1': '3. O ve a',
+                'or_enter_code_label_2': 'e introduce el código:',
                 'projection_btn_text': 'Proyectar',
                 'projection_btn_exit_text': 'Salir del modo proyector',
                 'total_votes_label': 'Votos totales',
@@ -232,6 +242,7 @@
                 'vote_sending': 'Enviando voto...',
                 'vote_timeout_error': 'No se recibió respuesta. Por favor, inténtalo de nuevo.',
                 'copied_toast': 'Código copiado al portapapeles',
+                'url_copied_toast': 'URL copiada al portapapeles',
                 'alert_no_question': 'Por favor, introduce una pregunta y al menos dos opciones.',
                 'alert_connection_error': 'Ha ocurrido un error con la conexión. Por favor, recarga la página.',
                 'join_error_text': 'Error de conexión. Verifica el código o que la persona anfitriona esté conectada.',
@@ -251,9 +262,10 @@
                 'prepare_session_btn': 'Preparar sessió',
                 'start_session_btn': 'Iniciar Sessió',
                 'live_session_title': 'Sessió en viu! Comparteix:',
-                'scan_qr_label': 'Escanejant el QR',
-                'or_go_to_label': 'O anant a:',
-                'and_enter_code_label': 'i introduint el codi:',
+                'scan_qr_label': '1. Escaneja el QR',
+                'direct_link_label': '2. O comparteix aquest enllaç directe:',
+                'or_enter_code_label_1': '3. O ves a',
+                'or_enter_code_label_2': 'i introdueix el codi:',
                 'projection_btn_text': 'Projectar',
                 'projection_btn_exit_text': 'Sortir del mode projector',
                 'total_votes_label': 'Vots totals',
@@ -266,6 +278,7 @@
                 'vote_sending': 'Enviant vot...',
                 'vote_timeout_error': 'No s\'ha rebut resposta. Si us plau, torna-ho a provar.',
                 'copied_toast': 'Codi copiat al porta-retalls',
+                'url_copied_toast': 'URL copiada al porta-retalls',
                 'alert_no_question': 'Si us plau, introdueix una pregunta i almenys dues opcions.',
                 'alert_connection_error': 'Hi ha hagut un error amb la connexió. Si us plau, recarrega la pàgina.',
                 'join_error_text': 'Error de connexió. Verifica el codi o que la persona amfitriona estigui connectada.',
@@ -285,9 +298,10 @@
                 'prepare_session_btn': 'Preparar sesión',
                 'start_session_btn': 'Iniciar Sesión',
                 'live_session_title': 'Sesión en vivo! Comparte:',
-                'scan_qr_label': 'Escaneando o QR',
-                'or_go_to_label': 'Ou indo a:',
-                'and_enter_code_label': 'e introducindo o código:',
+                'scan_qr_label': '1. Escanea o QR',
+                'direct_link_label': '2. Ou comparte esta ligazón directa:',
+                'or_enter_code_label_1': '3. Ou vai a',
+                'or_enter_code_label_2': 'e introduce o código:',
                 'projection_btn_text': 'Proxectar',
                 'projection_btn_exit_text': 'Saír do modo proxector',
                 'total_votes_label': 'Votos totais',
@@ -300,6 +314,7 @@
                 'vote_sending': 'Enviando voto...',
                 'vote_timeout_error': 'Non se recibiu resposta. Por favor, téntao de novo.',
                 'copied_toast': 'Código copiado ao portapapeis',
+                'url_copied_toast': 'URL copiada ao portapapeis',
                 'alert_no_question': 'Por favor, introduce unha pregunta e polo menos dúas opcións.',
                 'alert_connection_error': 'Houbo un erro coa conexión. Por favor, recarga a páxina.',
                 'join_error_text': 'Erro de conexión. Verifica o código ou que a persoa anfitrioa estea conectada.',
@@ -319,9 +334,10 @@
                 'prepare_session_btn': 'Saioa prestatu',
                 'start_session_btn': 'Saioa Hasi',
                 'live_session_title': 'Saioa zuzenean! Partekatu:',
-                'scan_qr_label': 'QR-a eskaneatzen',
-                'or_go_to_label': 'Edo hona joanda:',
-                'and_enter_code_label': 'eta kodea sartuz:',
+                'scan_qr_label': '1. Eskaneatu QR-a',
+                'direct_link_label': '2. Edo partekatu esteka zuzen hau:',
+                'or_enter_code_label_1': '3. Edo joan hona:',
+                'or_enter_code_label_2': 'eta sartu kodea:',
                 'projection_btn_text': 'Proiektatu',
                 'projection_btn_exit_text': 'Proiektagailu modutik irten',
                 'total_votes_label': 'Botoak guztira',
@@ -334,6 +350,7 @@
                 'vote_sending': 'Botoa bidaltzen...',
                 'vote_timeout_error': 'Ez da erantzunik jaso. Mesedez, saiatu berriro.',
                 'copied_toast': 'Kodea arbelean kopiatu da',
+                'url_copied_toast': 'URLa arbelean kopiatu da',
                 'alert_no_question': 'Mesedez, sartu galdera bat eta gutxienez bi aukera.',
                 'alert_connection_error': 'Konexioarekin errore bat gertatu da. Mesedez, birkargatu orria.',
                 'join_error_text': 'Konexio-errorea. Egiaztatu kodea edo antolatzailea konektatuta dagoela.',
@@ -370,7 +387,7 @@
         // --- LÓGICA DE INICIO ---
         window.onload = function() {
             const savedLang = localStorage.getItem('preferred_language');
-            const browserLang = navigator.language.split('-')[0];
+            const browserLang = (navigator.language || navigator.userLanguage).split('-')[0];
             
             if (savedLang && translations[savedLang]) {
                 setLanguage(savedLang);
@@ -436,17 +453,20 @@
             const presenterView = document.getElementById('presenter-view');
             const studentView = document.getElementById('student-view');
             const appContainer = document.getElementById('app');
+            const langSelector = document.getElementById('lang-selector-container');
 
             if (view === 'presenter') {
                 presenterView.classList.remove('hidden');
                 studentView.classList.add('hidden');
                 appContainer.classList.remove('max-w-2xl');
                 appContainer.classList.add('max-w-5xl');
-            } else {
+                langSelector.classList.remove('hidden');
+            } else { // 'student'
                 presenterView.classList.add('hidden');
                 studentView.classList.remove('hidden');
                 appContainer.classList.add('max-w-2xl');
                 appContainer.classList.remove('max-w-5xl');
+                langSelector.classList.remove('hidden');
             }
         };
 
@@ -471,13 +491,24 @@
             });
         }
 
+        function copyUrl(event) {
+            event.preventDefault();
+            const url = event.target.href;
+            navigator.clipboard.writeText(url).then(() => {
+                const toast = document.getElementById('toast');
+                toast.innerText = translations[currentLang]['url_copied_toast'];
+                toast.style.opacity = 1;
+                setTimeout(() => { toast.style.opacity = 0; }, 2000);
+            });
+        }
+
         function generateQRCode(url) {
             const container = document.getElementById('qrcode-container');
             container.innerHTML = '';
             new QRCode(container, {
                 text: url,
-                width: 220,
-                height: 220,
+                width: 200,
+                height: 200,
                 colorDark : "#000000",
                 colorLight : "#ffffff",
                 correctLevel : QRCode.CorrectLevel.H
@@ -576,11 +607,26 @@
                 const sessionUrl = baseUrl + '?session=' + id;
                 
                 generateQRCode(sessionUrl);
-                document.getElementById('session-code').innerText = id;
-                document.getElementById('app-url').innerText = baseUrl;
 
+                const sessionCodeEl = document.getElementById('session-code');
+                if (sessionCodeEl) sessionCodeEl.innerText = id;
+
+                const appUrlEl = document.getElementById('app-url');
+                if (appUrlEl) {
+                    appUrlEl.href = baseUrl;
+                    appUrlEl.innerText = baseUrl.replace(/^https?:\/\//, '');
+                }
+
+                const directLinkEl = document.getElementById('direct-session-link');
+                if (directLinkEl) {
+                    directLinkEl.href = sessionUrl;
+                    directLinkEl.innerText = sessionUrl;
+                }
+
+                document.getElementById('lang-selector-container').classList.add('hidden');
                 document.getElementById('create-session-form').classList.add('hidden');
                 document.getElementById('results-view').classList.remove('hidden');
+
                 updateResultsView(sessionData);
             });
 
@@ -596,7 +642,6 @@
                     }
                 });
                 conn.on('close', () => {
-                    // Limpiar la conexión cerrada del array para liberar recursos.
                     guestConnections = guestConnections.filter(c => c.peer !== conn.peer);
                 });
             });
@@ -616,12 +661,17 @@
         }
 
         function updateResultsView(data) {
-            document.getElementById('results-question').innerText = data.question;
-            const resultsContainer = document.getElementById('results-container');
-            resultsContainer.innerHTML = '';
+            const resultsQuestionEl = document.getElementById('results-question');
+            if(resultsQuestionEl) resultsQuestionEl.innerText = data.question;
+            
+            const resultsContainerEl = document.getElementById('results-container');
+            if(!resultsContainerEl) return;
+            resultsContainerEl.innerHTML = '';
 
             const totalVotes = data.options.reduce((sum, option) => sum + option.votes, 0);
-            document.getElementById('total-votes').innerText = totalVotes;
+            
+            const totalVotesEl = document.getElementById('total-votes');
+            if(totalVotesEl) totalVotesEl.innerText = totalVotes;
 
             data.options.forEach(option => {
                 const percentage = totalVotes > 0 ? (option.votes / totalVotes) * 100 : 0;
@@ -635,7 +685,7 @@
                         <div class="bg-green-500 h-8 md:h-10 rounded-full bar-transition" style="width: ${percentage}%"></div>
                     </div>
                 `;
-                resultsContainer.appendChild(resultElement);
+                resultsContainerEl.appendChild(resultElement);
             });
         }
 
@@ -671,7 +721,6 @@
                         clearInterval(countdownInterval);
                         localStorage.setItem('voted_in_' + hostConnection.peer, 'true');
                         showVotedView();
-                        // Cerrar la conexión después de un breve instante para asegurar que la UI se actualice.
                         setTimeout(() => {
                             if (hostConnection) hostConnection.close();
                         }, 500);
@@ -682,7 +731,6 @@
                     showJoinError();
                 });
                  hostConnection.on('close', () => {
-                    // Si el anfitrión cierra la conexión, mostrar un error.
                     if (!localStorage.getItem('voted_in_' + hostConnection.peer)) {
                        showJoinError();
                     }
@@ -697,11 +745,18 @@
         
         function showJoinError() {
             const errorP = document.getElementById('join-error');
-            errorP.innerText = translations[currentLang]['join_error_text'];
-            errorP.classList.remove('hidden');
-            document.getElementById('join-button-text').classList.remove('hidden');
-            document.getElementById('join-loader').classList.add('hidden');
-            document.getElementById('join-button').removeAttribute('disabled');
+            if(errorP) {
+                errorP.innerText = translations[currentLang]['join_error_text'];
+                errorP.classList.remove('hidden');
+            }
+            const joinButtonText = document.getElementById('join-button-text');
+            if(joinButtonText) joinButtonText.classList.remove('hidden');
+
+            const joinLoader = document.getElementById('join-loader');
+            if(joinLoader) joinLoader.classList.add('hidden');
+
+            const joinButton = document.getElementById('join-button');
+            if(joinButton) joinButton.removeAttribute('disabled');
         }
 
         function showVotingView(data) {
