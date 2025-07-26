@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Votación en Tiempo Real</title>
+    <!-- Tailwind CSS para un diseño rápido y moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts para una mejor tipografía -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Usamos la fuente Inter que hemos importado */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Pequeña animación para las barras de resultados */
+        .bar-transition {
+            transition: width 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 flex flex-col items-center justify-center min-h-screen p-4">
+
+    <div id="app" class="w-full max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8">
+
+        <!-- Selector de Vista: Para cambiar entre Presentador y Alumno -->
+        <div id="view-selector" class="mb-6">
+            <div class="flex border-b border-gray-200">
+                <button onclick="switchView('presenter')" id="presenter-tab" class="px-4 py-2 font-semibold text-blue-600 border-b-2 border-blue-600 focus:outline-none">Presentador</button>
+                <button onclick="switchView('student')" id="student-tab" class="px-4 py-2 font-semibold text-gray-500 focus:outline-none">Alumno</button>
+            </div>
+        </div>
+
+        <!-- Vista del Presentador -->
+        <div id="presenter-view">
+            <!-- Paso 1: Crear la pregunta -->
+            <div id="create-session-form">
+                <h2 class="text-2xl font-bold mb-4">Crear una nueva votación</h2>
+                <div class="mb-4">
+                    <label for="question" class="block text-sm font-medium text-gray-700 mb-1">Tu pregunta:</label>
+                    <input type="text" id="question" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Ej: ¿Cuál es la capital de Cataluña?">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Opciones de respuesta:</label>
+                    <div id="options-container" class="space-y-2">
+                        <input type="text" name="option" class="w-full p-2 border border-gray-300 rounded-md shadow-sm" placeholder="Opción 1">
+                        <input type="text" name="option" class="w-full p-2 border border-gray-300 rounded-md shadow-sm" placeholder="Opción 2">
+                    </div>
+                    <button onclick="addOption()" class="mt-2 text-sm text-blue-600 hover:text-blue-800">+ Añadir opción</button>
+                </div>
+                <button onclick="createSession()" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-300">
+                    Iniciar Sesión
+                </button>
+            </div>
+            
+            <!-- Paso 2: Mostrar resultados en vivo -->
+            <div id="results-view" class="hidden">
+                <div class="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 rounded-md mb-6">
+                    <p class="font-bold">¡Sesión en vivo!</p>
+                    <p>Comparte este código con tus alumnos: 
+                        <span id="session-code" class="text-2xl font-bold bg-white px-2 py-1 rounded-md shadow-sm cursor-pointer" onclick="copyCode()"></span>
+                    </p>
+                </div>
+                <h2 id="results-question" class="text-2xl font-bold mb-4"></h2>
+                <div id="results-container" class="space-y-4">
+                    <!-- Las barras de resultados se generarán aquí -->
+                </div>
+                 <p class="text-center mt-6 text-2xl font-bold">
+                    Votos totales: <span id="total-votes">0</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Vista del Alumno -->
+        <div id="student-view" class="hidden">
+            <!-- Paso 1: Unirse a la sesión -->
+            <div id="join-session-form">
+                <h2 class="text-2xl font-bold mb-4">Unirse a una votación</h2>
+                <label for="code-input" class="block text-sm font-medium text-gray-700 mb-1">Código de la sesión:</label>
+                <input type="text" id="code-input" class="w-full p-2 border uppercase border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Introduce el código">
+                <button onclick="joinSession()" class="mt-4 w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-300">
+                    Unirse
+                </button>
+                <p id="join-error" class="text-red-500 text-sm mt-2 hidden"></p>
+            </div>
+
+            <!-- Paso 2: Votar -->
+            <div id="voting-view" class="hidden">
+                <h2 id="vote-question" class="text-2xl font-bold mb-6"></h2>
+                <div id="vote-options-container" class="space-y-3">
+                    <!-- Los botones para votar se generarán aquí -->
+                </div>
+            </div>
+
+            <!-- Paso 3: Voto enviado -->
+            <div id="voted-view" class="hidden text-center py-8">
+                 <svg class="mx-auto h-16 w-16 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h2 class="text-2xl font-bold mt-4">¡Gracias por tu voto!</h2>
+                <p class="text-gray-600">Puedes ver los resultados en la pantalla del presentador.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Mensaje de copiado -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg opacity-0 transition-opacity duration-300">
+        Código copiado al portapapeles
+    </div>
+
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Importa las funciones que necesitas de los SDKs
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc, increment } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+
+        // ************************************************************************************
+        // ** IMPORTANTE: CONFIGURACIÓN DE FIREBASE                                          **
+        // ** 1. Ve a https://console.firebase.google.com/                                   **
+        // ** 2. Crea un nuevo proyecto.                                                     **
+        // ** 3. Ve a "Configuración del proyecto" y crea una "Aplicación web".              **
+        // ** 4. Copia el objeto de configuración 'firebaseConfig' y pégalo aquí abajo.      **
+        // ************************************************************************************
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY",
+            authDomain: "TU_AUTH_DOMAIN",
+            projectId: "TU_PROJECT_ID",
+            storageBucket: "TU_STORAGE_BUCKET",
+            messagingSenderId: "TU_MESSAGING_SENDER_ID",
+            appId: "TU_APP_ID"
+        };
+
+        // Inicializa Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Variable global para la sesión actual y la escucha de cambios
+        let currentSessionId = null;
+        let unsubscribe = null; // Para detener la escucha de cambios de Firestore
+
+        // --- LÓGICA GENERAL DE LA UI ---
+
+        window.switchView = (view) => {
+            const presenterTab = document.getElementById('presenter-tab');
+            const studentTab = document.getElementById('student-tab');
+            const presenterView = document.getElementById('presenter-view');
+            const studentView = document.getElementById('student-view');
+
+            if (view === 'presenter') {
+                presenterView.style.display = 'block';
+                studentView.style.display = 'none';
+                presenterTab.classList.add('text-blue-600', 'border-blue-600');
+                presenterTab.classList.remove('text-gray-500');
+                studentTab.classList.add('text-gray-500');
+                studentTab.classList.remove('text-blue-600', 'border-blue-600');
+            } else {
+                presenterView.style.display = 'none';
+                studentView.style.display = 'block';
+                studentTab.classList.add('text-blue-600', 'border-blue-600');
+                studentTab.classList.remove('text-gray-500');
+                presenterTab.classList.add('text-gray-500');
+                presenterTab.classList.remove('text-blue-600', 'border-blue-600');
+            }
+        };
+
+        window.addOption = () => {
+            const container = document.getElementById('options-container');
+            const optionCount = container.children.length + 1;
+            const newOptionInput = document.createElement('input');
+            newOptionInput.type = 'text';
+            newOptionInput.name = 'option';
+            newOptionInput.className = 'w-full p-2 border border-gray-300 rounded-md shadow-sm';
+            newOptionInput.placeholder = `Opción ${optionCount}`;
+            container.appendChild(newOptionInput);
+        };
+        
+        window.copyCode = () => {
+            const code = document.getElementById('session-code').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                const toast = document.getElementById('toast');
+                toast.style.opacity = 1;
+                setTimeout(() => { toast.style.opacity = 0; }, 2000);
+            });
+        }
+
+        // --- LÓGICA DEL PRESENTADOR ---
+        
+        window.createSession = async () => {
+            const question = document.getElementById('question').value.trim();
+            const optionInputs = document.querySelectorAll('#options-container input[name="option"]');
+            const options = Array.from(optionInputs)
+                .map(input => input.value.trim())
+                .filter(text => text !== '')
+                .map(text => ({ text: text, votes: 0 }));
+
+            if (!question || options.length < 2) {
+                alert('Por favor, introduce una pregunta y al menos dos opciones.');
+                return;
+            }
+
+            // Genera un ID de sesión aleatorio y corto (6 caracteres alfanuméricos)
+            const sessionId = Math.random().toString(36).substring(2, 8).toUpperCase();
+            currentSessionId = sessionId;
+
+            const sessionData = {
+                question: question,
+                options: options,
+                createdAt: new Date()
+            };
+
+            try {
+                // Guarda la nueva sesión en Firestore
+                await setDoc(doc(db, "sessions", sessionId), sessionData);
+                
+                // Cambia a la vista de resultados
+                document.getElementById('create-session-form').classList.add('hidden');
+                document.getElementById('results-view').classList.remove('hidden');
+                document.getElementById('session-code').innerText = sessionId;
+
+                // Empieza a escuchar los cambios en esta sesión
+                listenToSession(sessionId);
+
+            } catch (e) {
+                console.error("Error al crear la sesión: ", e);
+                alert("Hubo un error al crear la sesión. Revisa la consola.");
+            }
+        };
+
+        function listenToSession(sessionId) {
+            // Si ya hay una escucha activa, la detenemos antes de empezar una nueva
+            if (unsubscribe) {
+                unsubscribe();
+            }
+            
+            unsubscribe = onSnapshot(doc(db, "sessions", sessionId), (doc) => {
+                if (doc.exists()) {
+                    const sessionData = doc.data();
+                    // Actualiza la UI del presentador (resultados)
+                    updateResultsView(sessionData);
+                    // Actualiza la UI del alumno (si está en la misma sesión)
+                    if(currentSessionId === sessionId && document.getElementById('student-view').style.display === 'block') {
+                        updateVotingView(sessionData);
+                    }
+                } else {
+                    console.log("La sesión ya no existe.");
+                    // Aquí podrías manejar el caso de que la sesión sea borrada
+                }
+            });
+        }
+
+        function updateResultsView(data) {
+            document.getElementById('results-question').innerText = data.question;
+            const resultsContainer = document.getElementById('results-container');
+            resultsContainer.innerHTML = ''; // Limpia los resultados anteriores
+
+            const totalVotes = data.options.reduce((sum, option) => sum + option.votes, 0);
+            document.getElementById('total-votes').innerText = totalVotes;
+
+            data.options.forEach(option => {
+                const percentage = totalVotes > 0 ? (option.votes / totalVotes) * 100 : 0;
+
+                const resultElement = document.createElement('div');
+                resultElement.innerHTML = `
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-gray-700">${option.text}</span>
+                        <span class="font-bold">${option.votes} (${percentage.toFixed(0)}%)</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-4">
+                        <div class="bg-blue-500 h-4 rounded-full bar-transition" style="width: ${percentage}%"></div>
+                    </div>
+                `;
+                resultsContainer.appendChild(resultElement);
+            });
+        }
+
+
+        // --- LÓGICA DEL ALUMNO ---
+
+        window.joinSession = async () => {
+            const code = document.getElementById('code-input').value.trim().toUpperCase();
+            const errorP = document.getElementById('join-error');
+            if (!code) return;
+
+            const sessionRef = doc(db, "sessions", code);
+            try {
+                const docSnap = await getDoc(sessionRef);
+
+                if (docSnap.exists()) {
+                    currentSessionId = code;
+                    errorP.classList.add('hidden');
+                    document.getElementById('join-session-form').classList.add('hidden');
+                    document.getElementById('voting-view').classList.remove('hidden');
+                    // Empieza a escuchar los cambios en esta sesión
+                    listenToSession(code);
+                } else {
+                    errorP.innerText = "No se encontró ninguna sesión con ese código.";
+                    errorP.classList.remove('hidden');
+                }
+            } catch (e) {
+                console.error("Error al unirse a la sesión: ", e);
+                errorP.innerText = "Hubo un error de conexión. Inténtalo de nuevo.";
+                errorP.classList.remove('hidden');
+            }
+        };
+
+        function updateVotingView(data) {
+            document.getElementById('vote-question').innerText = data.question;
+            const optionsContainer = document.getElementById('vote-options-container');
+            optionsContainer.innerHTML = ''; // Limpia opciones anteriores
+
+            data.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = "w-full text-left p-4 border border-gray-300 rounded-lg hover:bg-blue-50 hover:border-blue-400 transition duration-200";
+                button.innerText = option.text;
+                button.onclick = () => castVote(index);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        window.castVote = async (optionIndex) => {
+            if (!currentSessionId) return;
+
+            const sessionRef = doc(db, "sessions", currentSessionId);
+            
+            // Para evitar votos duplicados, podríamos guardar en localStorage que ya se votó
+            if (localStorage.getItem(`voted_in_${currentSessionId}`)) {
+                alert("Ya has votado en esta sesión.");
+                return;
+            }
+
+            try {
+                // Leemos el documento una vez para obtener el array de opciones
+                const docSnap = await getDoc(sessionRef);
+                if (docSnap.exists()) {
+                    const sessionData = docSnap.data();
+                    const newOptions = [...sessionData.options];
+                    // Incrementamos el contador localmente
+                    newOptions[optionIndex].votes += 1;
+                    
+                    // Actualizamos el documento completo en Firestore
+                    await updateDoc(sessionRef, {
+                        options: newOptions
+                    });
+
+                    // Marcamos que el usuario ya ha votado en esta sesión
+                    localStorage.setItem(`voted_in_${currentSessionId}`, 'true');
+
+                    // Cambiamos a la vista de "voto enviado"
+                    document.getElementById('voting-view').classList.add('hidden');
+                    document.getElementById('voted-view').classList.remove('hidden');
+                }
+            } catch (e) {
+                console.error("Error al emitir el voto: ", e);
+                alert("Hubo un error al enviar tu voto.");
+            }
+        };
+
+    </script>
+</body>
+</html>
