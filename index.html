@@ -592,9 +592,12 @@
                 conn.on('data', (data) => {
                     if (data.type === 'vote') {
                         handleVote(data.payload.optionIndex);
-                        // Enviar confirmación de vuelta al participante que votó
                         conn.send({ type: 'vote-confirmed' });
                     }
+                });
+                conn.on('close', () => {
+                    // Limpiar la conexión cerrada del array para liberar recursos.
+                    guestConnections = guestConnections.filter(c => c.peer !== conn.peer);
                 });
             });
 
@@ -668,6 +671,10 @@
                         clearInterval(countdownInterval);
                         localStorage.setItem('voted_in_' + hostConnection.peer, 'true');
                         showVotedView();
+                        // Cerrar la conexión después de un breve instante para asegurar que la UI se actualice.
+                        setTimeout(() => {
+                            if (hostConnection) hostConnection.close();
+                        }, 500);
                     }
                 });
                  hostConnection.on('error', (err) => {
@@ -675,7 +682,10 @@
                     showJoinError();
                 });
                  hostConnection.on('close', () => {
-                    showJoinError();
+                    // Si el anfitrión cierra la conexión, mostrar un error.
+                    if (!localStorage.getItem('voted_in_' + hostConnection.peer)) {
+                       showJoinError();
+                    }
                  });
             });
             
