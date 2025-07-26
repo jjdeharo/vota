@@ -313,13 +313,13 @@
 
         function drawWordCloud() {
             const wordList = Object.entries(wordCounts).map(([word, count]) => ({ text: word, size: 10 + count * 9, count: count }))
-                                .sort((a, b) => b.count - a.count); // Ordenar para centrar la más grande
+                                .sort((a, b) => b.count - a.count);
 
             const container = d3.select("#wordcloud-container svg");
             if (container.empty()) {
                  d3.select("#wordcloud-container").append("svg");
             }
-            d3.select("#wordcloud-container svg").html(""); // Limpiar SVG
+            d3.select("#wordcloud-container svg").html("");
 
             const tooltip = d3.select("#tooltip");
 
@@ -329,7 +329,7 @@
                 .padding(5)
                 .rotate(() => {
                     if (currentLayout === 'horizontal') return 0;
-                    return (~~(Math.random() * 2) * 90); // 0 o 90 grados
+                    return (~~(Math.random() * 2) * 90);
                 })
                 .fontSize(d => d.size)
                 .on("end", draw);
@@ -534,11 +534,14 @@
                     if (data.type === 'session-data') {
                         sessionData = data.payload;
                         applyTheme(sessionData.themeColor);
-                        myWordsCount = 0;
+                        const storageKey = `wordcloud_count_${hostConnection.peer}`;
+                        myWordsCount = parseInt(localStorage.getItem(storageKey) || '0', 10);
                         showWordForm();
                     } else if (data.type === 'word-received') {
                         clearTimeout(sendTimeout);
                         myWordsCount++;
+                        const storageKey = `wordcloud_count_${hostConnection.peer}`;
+                        localStorage.setItem(storageKey, myWordsCount);
                         updateWordsLeft();
                     }
                 });
