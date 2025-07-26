@@ -59,10 +59,10 @@
             padding: 2rem;
             cursor: pointer;
         }
-        body.projection-mode #view-selector,
         body.projection-mode #lang-selector-container,
         body.projection-mode .info-box,
-        body.projection-mode #projection-btn {
+        body.projection-mode #projection-btn,
+        body.projection-mode .role-switch-link {
             display: none;
         }
         body.projection-mode #results-view .results-content {
@@ -79,7 +79,7 @@
 </head>
 <body class="bg-gray-100 text-gray-800 flex flex-col items-center justify-center min-h-screen p-4">
 
-    <div id="app" class="w-full max-w-5xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8 transition-all duration-300 relative">
+    <div id="app" class="w-full max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8 transition-all duration-300 relative">
 
         <!-- Selector de Idioma -->
         <div id="lang-selector-container" class="absolute top-4 right-4 z-10">
@@ -91,16 +91,8 @@
             </select>
         </div>
 
-        <!-- Selector de Vista -->
-        <div id="view-selector" class="mb-6 pt-8">
-            <div class="flex border-b border-gray-200">
-                <button onclick="switchView('presenter')" id="presenter-tab" data-translate-key="presenter_tab" class="px-4 py-2 font-semibold text-green-600 border-b-2 border-green-600 focus:outline-none">Rol de presentación</button>
-                <button onclick="switchView('student')" id="student-tab" data-translate-key="student_tab" class="px-4 py-2 font-semibold text-gray-500 focus:outline-none">Participante</button>
-            </div>
-        </div>
-
-        <!-- Vista del Presentador -->
-        <div id="presenter-view">
+        <!-- Vista del Presentador (oculta por defecto) -->
+        <div id="presenter-view" class="hidden">
             <div id="create-session-form">
                 <h2 class="text-2xl font-bold mb-4" data-translate-key="create_title">Crear una nueva votación</h2>
                 <div class="mb-4">
@@ -128,16 +120,19 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2" data-translate-key="shareable_link_title">Enlace de preparación listo. Cópialo y guárdalo para usarlo más tarde:</label>
                     <input type="text" id="shareable-link-input" readonly class="w-full p-2 border border-gray-300 rounded-md bg-white font-mono text-sm">
                 </div>
+                 <p class="text-center mt-8 role-switch-link">
+                    <a href="#" onclick="event.preventDefault(); switchView('student')" class="text-sm text-gray-500 hover:text-green-600" data-translate-key="switch_to_student">¿Buscas unirte a una sesión? Haz clic aquí.</a>
+                </p>
             </div>
             
             <div id="results-view" class="hidden">
-                <div class="flex flex-col lg:flex-row lg:gap-8">
+                 <div class="flex flex-col lg:flex-row lg:gap-8">
                     <div class="info-box lg:w-1/2 xl:w-2/5 lg:flex-shrink-0 bg-green-50 border border-green-200 p-4 rounded-md mb-6 lg:mb-0 flex flex-col">
                         <p class="font-bold text-center mb-4 text-green-800" data-translate-key="live_session_title">¡Sesión en vivo! Comparte:</p>
                         <div class="flex flex-col items-center justify-center flex-grow gap-y-4">
                             <div class="text-center w-full">
                                 <p class="text-sm" data-translate-key="scan_qr_label">Escaneando el QR</p>
-                                <div id="qrcode-container" class="mt-2 w-full max-w-sm mx-auto"></div>
+                                <div id="qrcode-container" class="mt-2 w-full max-w-xs mx-auto"></div>
                             </div>
                             <div class="text-center">
                                 <p class="text-sm" data-translate-key="or_go_to_label">O yendo a:</p>
@@ -166,8 +161,8 @@
             </div>
         </div>
 
-        <!-- Vista del Participante -->
-        <div id="student-view" class="hidden">
+        <!-- Vista del Participante (visible por defecto) -->
+        <div id="student-view">
             <div id="join-session-form">
                 <h2 class="text-2xl font-bold mb-4" data-translate-key="join_title">Unirse a una votación</h2>
                 <label for="code-input" class="block text-sm font-medium text-gray-700 mb-1" data-translate-key="session_code_label">Código de la sesión:</label>
@@ -177,6 +172,9 @@
                     <div id="join-loader" class="loader hidden ml-3"></div>
                 </button>
                 <p id="join-error" class="text-red-500 text-sm mt-2 hidden"></p>
+                <p class="text-center mt-8 role-switch-link">
+                    <a href="#" onclick="event.preventDefault(); switchView('presenter')" class="text-sm text-gray-500 hover:text-green-600" data-translate-key="switch_to_presenter">¿Eres el presentador? Inicia sesión aquí.</a>
+                </p>
             </div>
 
             <div id="voting-view" class="hidden">
@@ -202,8 +200,6 @@
         const translations = {
             'es': {
                 'page_title': 'Votación en Tiempo Real',
-                'presenter_tab': 'Rol de presentación',
-                'student_tab': 'Participante',
                 'create_title': 'Crear una nueva votación',
                 'question_label': 'Tu pregunta:',
                 'question_placeholder': 'Ej: ¿Cuál es tu color favorito?',
@@ -231,11 +227,11 @@
                 'alert_connection_error': 'Ha ocurrido un error con la conexión. Por favor, recarga la página.',
                 'join_error_text': 'Error de conexión. Verifica el código o que la persona anfitriona esté conectada.',
                 'shareable_link_title': 'Enlace de preparación listo. Cópialo y guárdalo para usarlo más tarde:',
+                'switch_to_presenter': '¿Eres el presentador? Inicia sesión aquí.',
+                'switch_to_student': '¿Buscas unirte a una sesión? Haz clic aquí.',
             },
             'ca': {
                 'page_title': 'Votació en Temps Real',
-                'presenter_tab': 'Rol de presentació',
-                'student_tab': 'Participant',
                 'create_title': 'Crear una nova votació',
                 'question_label': 'La teva pregunta:',
                 'question_placeholder': 'Ex: Quin és el teu color preferit?',
@@ -263,11 +259,11 @@
                 'alert_connection_error': 'Hi ha hagut un error amb la connexió. Si us plau, recarrega la pàgina.',
                 'join_error_text': 'Error de connexió. Verifica el codi o que la persona amfitriona estigui connectada.',
                 'shareable_link_title': 'Enllaç de preparació a punt. Copia\'l i desa\'l per a més tard:',
+                'switch_to_presenter': 'Ets el presentador? Inicia sessió aquí.',
+                'switch_to_student': 'Busques unir-te a una sessió? Fes clic aquí.',
             },
             'gl': {
                 'page_title': 'Votación en Tempo Real',
-                'presenter_tab': 'Rol de presentación',
-                'student_tab': 'Participante',
                 'create_title': 'Crear unha nova votación',
                 'question_label': 'A túa pregunta:',
                 'question_placeholder': 'Ex: Cal é a túa cor favorita?',
@@ -295,11 +291,11 @@
                 'alert_connection_error': 'Houbo un erro coa conexión. Por favor, recarga a páxina.',
                 'join_error_text': 'Erro de conexión. Verifica o código ou que a persoa anfitrioa estea conectada.',
                 'shareable_link_title': 'Ligazón de preparación lista. Cópiaa e gárdaa para usala máis tarde:',
+                'switch_to_presenter': 'Es o presentador? Inicia sesión aquí.',
+                'switch_to_student': 'Buscas unirte a unha sesión? Fai clic aquí.',
             },
             'eu': {
                 'page_title': 'Bozketa Denbora Errealean',
-                'presenter_tab': 'Aurkezpen rola',
-                'student_tab': 'Parte-hartzailea',
                 'create_title': 'Bozketa berria sortu',
                 'question_label': 'Zure galdera:',
                 'question_placeholder': 'Adib: Zein da zure kolorerik gogokoena?',
@@ -327,6 +323,8 @@
                 'alert_connection_error': 'Konexioarekin errore bat gertatu da. Mesedez, birkargatu orria.',
                 'join_error_text': 'Konexio-errorea. Egiaztatu kodea edo antolatzailea konektatuta dagoela.',
                 'shareable_link_title': 'Prestatzeko esteka prest. Kopiatu eta gorde geroago erabiltzeko:',
+                'switch_to_presenter': 'Aurkezlea zara? Hasi saioa hemen.',
+                'switch_to_student': 'Saio batean sartu nahi duzu? Egin klik hemen.',
             }
         };
 
@@ -354,7 +352,6 @@
             document.title = translations[lang]['page_title'] || 'Votación en Tiempo Real';
         }
 
-
         // --- LÓGICA DE INICIO ---
         window.onload = function() {
             const savedLang = localStorage.getItem('preferred_language');
@@ -376,13 +373,12 @@
             const sessionId = params.get('session');
             const data = params.get('data');
 
-            if (sessionId) { // Prioridad para los participantes
-                document.getElementById('view-selector').style.display = 'none';
-                document.getElementById('lang-selector-container').style.display = 'none';
+            if (sessionId) { // Si hay un ID de sesión, el usuario es un participante.
                 switchView('student');
                 document.getElementById('code-input').value = sessionId;
                 joinSession();
-            } else if (data) { // Si no, comprobar si es una sesión preparada
+            } else if (data) { // Si hay datos, es una sesión preparada para un presentador.
+                switchView('presenter');
                 try {
                     const decodedData = JSON.parse(atob(data));
                     const questionInput = document.getElementById('question');
@@ -399,13 +395,15 @@
                         newOptionInput.value = optionText;
                         optionsContainer.appendChild(newOptionInput);
                     });
-
                 } catch (e) {
                     console.error("Error al decodificar los datos de la sesión preparada:", e);
+                    switchView('student'); // Si falla, volver a la vista de estudiante.
                 }
+            } else {
+                // Por defecto, mostrar siempre la vista de estudiante.
+                switchView('student');
             }
         }
-
 
         // --- Variables Globales ---
         let peer = null;
@@ -417,25 +415,20 @@
         // --- LÓGICA GENERAL DE LA UI ---
 
         function switchView(view) {
-            const presenterTab = document.getElementById('presenter-tab');
-            const studentTab = document.getElementById('student-tab');
             const presenterView = document.getElementById('presenter-view');
             const studentView = document.getElementById('student-view');
+            const appContainer = document.getElementById('app');
 
             if (view === 'presenter') {
-                presenterView.style.display = 'block';
-                studentView.style.display = 'none';
-                presenterTab.classList.add('text-green-600', 'border-green-600');
-                presenterTab.classList.remove('text-gray-500');
-                studentTab.classList.add('text-gray-500');
-                studentTab.classList.remove('text-green-600', 'border-green-600');
+                presenterView.classList.remove('hidden');
+                studentView.classList.add('hidden');
+                appContainer.classList.remove('max-w-2xl');
+                appContainer.classList.add('max-w-5xl');
             } else {
-                presenterView.style.display = 'none';
-                studentView.style.display = 'block';
-                studentTab.classList.add('text-green-600', 'border-green-600');
-                studentTab.classList.remove('text-gray-500');
-                presenterTab.classList.add('text-gray-500');
-                presenterTab.classList.remove('text-green-600', 'border-green-600');
+                presenterView.classList.add('hidden');
+                studentView.classList.remove('hidden');
+                appContainer.classList.add('max-w-2xl');
+                appContainer.classList.remove('max-w-5xl');
             }
         };
 
@@ -463,11 +456,10 @@
         function generateQRCode(url) {
             const container = document.getElementById('qrcode-container');
             container.innerHTML = '';
-            // **NUEVO: Tamaño fijo y grande para el QR**
             new QRCode(container, {
                 text: url,
-                width: 280,
-                height: 280,
+                width: 220,
+                height: 220,
                 colorDark : "#000000",
                 colorLight : "#ffffff",
                 correctLevel : QRCode.CorrectLevel.H
@@ -555,7 +547,6 @@
             document.getElementById('host-loader').classList.remove('hidden');
             document.getElementById('prepare-button').setAttribute('disabled', true);
 
-
             sessionData = { question, options };
             
             const sessionId = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -598,7 +589,16 @@
 
         function handleVote(optionIndex) {
             sessionData.options[optionIndex].votes++;
+            broadcastUpdate();
             updateResultsView(sessionData);
+        }
+
+        function broadcastUpdate() {
+            guestConnections.forEach(conn => {
+                if (conn && conn.open) {
+                    conn.send({ type: 'update', payload: sessionData });
+                }
+            });
         }
 
         function updateResultsView(data) {
@@ -628,8 +628,9 @@
         // --- LÓGICA DEL PARTICIPANTE (INVITADO) ---
 
         function joinSession() {
-            const hostId = document.getElementById('code-input').value.trim();
+            const hostId = document.getElementById('code-input').value.trim().toUpperCase();
             if (!hostId) return;
+            document.getElementById('code-input').value = hostId;
 
             document.getElementById('join-button').setAttribute('disabled', true);
             document.getElementById('join-button-text').classList.add('hidden');
@@ -647,20 +648,21 @@
                     if (data.type === 'session-data') {
                         const hasVoted = localStorage.getItem('voted_in_' + hostConnection.peer);
                         if (hasVoted) {
-                            document.getElementById('join-session-form').classList.add('hidden');
-                            document.getElementById('voting-view').classList.add('hidden');
-                            document.getElementById('voted-view').classList.remove('hidden');
+                            showVotedView();
                         } else {
-                            document.getElementById('join-session-form').classList.add('hidden');
-                            document.getElementById('voting-view').classList.remove('hidden');
-                            updateVotingView(data.payload);
+                            showVotingView(data.payload);
                         }
+                    } else if (data.type === 'update') {
+                        // Opcional: Podrías hacer algo con la actualización, pero la vista de "votado" ya es terminal.
                     }
                 });
                  hostConnection.on('error', (err) => {
                     console.error('Error en la conexión:', err);
                     showJoinError();
                 });
+                 hostConnection.on('close', () => {
+                    showJoinError();
+                 });
             });
             
             peer.on('error', (err) => {
@@ -678,7 +680,12 @@
             document.getElementById('join-button').removeAttribute('disabled');
         }
 
-        function updateVotingView(data) {
+        function showVotingView(data) {
+            document.getElementById('join-session-form').classList.add('hidden');
+            document.getElementById('voted-view').classList.add('hidden');
+            const votingView = document.getElementById('voting-view');
+            votingView.classList.remove('hidden');
+
             document.getElementById('vote-question').innerText = data.question;
             const optionsContainer = document.getElementById('vote-options-container');
             optionsContainer.innerHTML = '';
@@ -692,14 +699,19 @@
             });
         }
 
+        function showVotedView() {
+            document.getElementById('join-session-form').classList.add('hidden');
+            document.getElementById('voting-view').classList.add('hidden');
+            document.getElementById('voted-view').classList.remove('hidden');
+        }
+
         function castVote(optionIndex) {
             if (hostConnection) {
                 const hostId = hostConnection.peer;
                 localStorage.setItem('voted_in_' + hostId, 'true');
                 
                 hostConnection.send({ type: 'vote', payload: { optionIndex } });
-                document.getElementById('voting-view').classList.add('hidden');
-                document.getElementById('voted-view').classList.remove('hidden');
+                showVotedView();
             }
         }
     </script>
