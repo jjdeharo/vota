@@ -4,13 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nube de Palabras en Tiempo Real</title>
+    <!-- Tailwind CSS para el diseño -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- PeerJS para la conexión WebRTC -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.4.7/peerjs.min.js"></script>
+    <!-- D3.js (v3 compatible) y D3-cloud para la nube de palabras -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-cloud/1.2.5/d3.layout.cloud.js"></script>
+    <!-- Librería para generar Códigos QR -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Librerías para exportar a PNG -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -111,6 +117,7 @@
             align-items: center;
             justify-content: center;
             padding: 0;
+            background-color: transparent;
         }
         .hide-on-projection {
             transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -130,12 +137,14 @@
             max-width: 90vw;
             height: 80vh;
             padding: 0;
+            background-color: var(--theme-color-content-bg);
         }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex flex-col items-center justify-center min-h-screen p-4">
 
     <div id="app" class="w-full max-w-5xl mx-auto rounded-xl shadow-lg transition-all duration-300 relative">
+        <!-- Selector de Idioma -->
         <div id="lang-selector-container" class="absolute top-4 right-4 z-10 hide-on-projection">
             <select id="lang-selector" onchange="setLanguage(this.value)" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2">
                 <option value="es">Español</option>
@@ -146,6 +155,7 @@
             </select>
         </div>
 
+        <!-- Vista del Presentador -->
         <div id="presenter-view" class="hidden">
             <div id="create-session-form" class="themed-content-bg p-6 md:p-8 rounded-xl">
                 <h2 class="text-2xl font-bold mb-6" data-translate-key="create_title">Crear una nueva lluvia de ideas</h2>
@@ -239,6 +249,7 @@
             </div>
         </div>
 
+        <!-- Vista del Participante -->
         <div id="participant-view" class="hidden bg-white p-6 md:p-8 rounded-xl">
             <div id="join-session-form">
                 <h2 class="text-2xl font-bold mb-4" data-translate-key="join_title">Unirse a una sesión</h2>
@@ -288,6 +299,7 @@
 
     <div id="toast" class="fixed bottom-5 right-5 bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg opacity-0 transition-opacity duration-300"></div>
 
+    <!-- Modal de Confirmación -->
     <div id="confirm-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full">
             <h3 class="text-lg font-bold mb-4" data-translate-key="confirm_end_title">¿Finalizar sesión?</h3>
@@ -387,7 +399,7 @@
             const maxCount = d3.max(counts);
             
             const numWords = wordList.length;
-            const maxFontSize = Math.min(width / 4, Math.max(40, 150 - numWords * 2));
+            const maxFontSize = Math.min(width / 5, Math.max(40, 150 - numWords * 2));
             const minFontSize = Math.max(15, maxFontSize / 5);
 
             let fontScale;
@@ -606,8 +618,8 @@
 
         // --- LÓGICA DE EXPORTACIÓN ---
         function exportPNG() {
-            const node = document.getElementById('wordcloud-container');
-            domtoimage.toBlob(node, { bgcolor: '#FFFFFF' })
+            const node = document.getElementById('results-column');
+            domtoimage.toBlob(node, { bgcolor: getComputedStyle(node).backgroundColor })
                 .then(function (blob) {
                     window.saveAs(blob, 'nube-de-palabras.png');
                 });
