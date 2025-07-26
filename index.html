@@ -13,7 +13,7 @@
     <!-- Google Fonts para una mejor tipografía -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -33,24 +33,44 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        /* Estilo para el contenedor del QR para que el código se vea nítido */
         #qrcode-container {
             padding: 10px;
             background: white;
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            display: inline-block; /* Asegura que el contenedor se ajuste al QR */
+            display: inline-block;
         }
         #qrcode-container img {
-            display: block; /* Evita espacios extra debajo de la imagen del QR */
+            display: block;
+        }
+        /* --- NUEVO: Estilos para el Modo Proyector --- */
+        body.projection-mode {
+            overflow: hidden; /* Evita el scroll en modo proyector */
+        }
+        body.projection-mode #app {
+            max-width: 100%;
+            width: 100%;
+            height: 100vh;
+            border-radius: 0;
+            padding: 2rem;
+        }
+        body.projection-mode #view-selector,
+        body.projection-mode #results-view .info-box {
+            display: none; /* Oculta el selector de vista y la caja de info */
+        }
+        body.projection-mode #results-view {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* Centra el contenido verticalmente */
         }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex flex-col items-center justify-center min-h-screen p-4">
 
-    <div id="app" class="w-full max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8">
+    <div id="app" class="w-full max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8 transition-all duration-300">
 
-        <!-- Selector de Vista: Para cambiar entre Presentador y Alumno -->
+        <!-- Selector de Vista -->
         <div id="view-selector" class="mb-6">
             <div class="flex border-b border-gray-200">
                 <button onclick="switchView('presenter')" id="presenter-tab" class="px-4 py-2 font-semibold text-blue-600 border-b-2 border-blue-600 focus:outline-none">Presentador (Anfitrión)</button>
@@ -80,8 +100,8 @@
                 </button>
             </div>
             
-            <div id="results-view" class="hidden">
-                 <div class="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 rounded-md mb-6">
+            <div id="results-view" class="hidden relative">
+                 <div class="info-box bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 rounded-md mb-6">
                     <p class="font-bold text-center">¡Sesión en vivo! Comparte con tus alumnos:</p>
                     <div class="flex flex-col md:flex-row items-center justify-center gap-6 mt-4">
                         <div class="text-center">
@@ -96,9 +116,16 @@
                         </div>
                     </div>
                 </div>
-                <h2 id="results-question" class="text-2xl font-bold mb-4"></h2>
-                <div id="results-container" class="space-y-4"></div>
-                 <p class="text-center mt-6 text-2xl font-bold">
+                 <!-- NUEVO: Botón de modo proyector -->
+                <div class="absolute top-0 right-0">
+                    <button id="projection-btn" onclick="toggleProjectionMode()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg inline-flex items-center text-sm transition-opacity duration-300">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"></path></svg>
+                        <span>Proyectar</span>
+                    </button>
+                </div>
+                <h2 id="results-question" class="text-3xl md:text-5xl font-extrabold mb-8 text-center"></h2>
+                <div id="results-container" class="space-y-6 w-full"></div>
+                <p class="text-center text-2xl md:text-4xl font-bold mt-12">
                     Votos totales: <span id="total-votes">0</span>
                 </p>
             </div>
@@ -147,8 +174,7 @@
             const sessionId = params.get('session');
 
             if (sessionId) {
-                // Si hay un ID de sesión en la URL, es un alumno.
-                document.getElementById('view-selector').style.display = 'none'; // Ocultar selector de vista
+                document.getElementById('view-selector').style.display = 'none';
                 switchView('student');
                 document.getElementById('code-input').value = sessionId;
                 joinSession();
@@ -158,9 +184,9 @@
 
         // --- Variables Globales ---
         let peer = null;
-        let hostConnection = null; // Para el alumno: la conexión con el anfitrión
-        let guestConnections = []; // Para el anfitrión: lista de conexiones con los alumnos
-        let sessionData = {}; // Para el anfitrión: guarda el estado de la votación
+        let hostConnection = null;
+        let guestConnections = [];
+        let sessionData = {};
         let myPeerId = null;
 
         // --- LÓGICA GENERAL DE LA UI ---
@@ -210,7 +236,7 @@
 
         function generateQRCode(url) {
             const container = document.getElementById('qrcode-container');
-            container.innerHTML = ''; // Limpia el QR anterior si existe
+            container.innerHTML = '';
             new QRCode(container, {
                 text: url,
                 width: 200,
@@ -219,6 +245,20 @@
                 colorLight : "#ffffff",
                 correctLevel : QRCode.CorrectLevel.H
             });
+        }
+
+        // --- NUEVO: Función para modo proyector ---
+        function toggleProjectionMode() {
+            document.body.classList.toggle('projection-mode');
+            const btn = document.getElementById('projection-btn');
+            const icon = `<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"></path></svg>`;
+            const exitIcon = `<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 4H3v7M10 4l-7 7m18-4h-7v7M14 4l7 7m-18 6h7v-7M4 20l7-7m10 0h-7v7M20 20l-7-7"></path></svg>`;
+
+            if (document.body.classList.contains('projection-mode')) {
+                btn.innerHTML = `${exitIcon}<span>Salir del modo proyector</span>`;
+            } else {
+                btn.innerHTML = `${icon}<span>Proyectar</span>`;
+            }
         }
 
         // --- LÓGICA DEL PRESENTADOR (ANFITRIÓN) ---
@@ -251,7 +291,6 @@
                 
                 generateQRCode(sessionUrl);
                 document.getElementById('session-code').innerText = id;
-                // **NUEVO: Mostrar la URL base de la aplicación**
                 document.getElementById('app-url').innerText = baseUrl;
 
                 document.getElementById('create-session-form').classList.add('hidden');
@@ -296,12 +335,12 @@
                 const percentage = totalVotes > 0 ? (option.votes / totalVotes) * 100 : 0;
                 const resultElement = document.createElement('div');
                 resultElement.innerHTML = `
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-gray-700">${option.text}</span>
-                        <span class="font-bold">${option.votes} (${percentage.toFixed(0)}%)</span>
+                    <div class="flex justify-between items-baseline mb-2">
+                        <span class="text-xl md:text-3xl text-gray-800 font-medium">${option.text}</span>
+                        <span class="text-xl md:text-3xl font-bold text-gray-900">${option.votes} <span class="text-lg md:text-2xl text-gray-600 font-medium">(${percentage.toFixed(0)}%)</span></span>
                     </div>
-                    <div class="w-full bg-gray-200 rounded-full h-4">
-                        <div class="bg-blue-500 h-4 rounded-full bar-transition" style="width: ${percentage}%"></div>
+                    <div class="w-full bg-gray-200 rounded-full h-8 md:h-12">
+                        <div class="bg-blue-500 h-8 md:h-12 rounded-full bar-transition" style="width: ${percentage}%"></div>
                     </div>
                 `;
                 resultsContainer.appendChild(resultElement);
@@ -324,9 +363,7 @@
             peer.on('open', () => {
                 hostConnection = peer.connect(hostId, { reliable: true });
                 
-                hostConnection.on('open', () => {
-                    // Conexión establecida
-                });
+                hostConnection.on('open', () => {});
 
                 hostConnection.on('data', (data) => {
                     if (data.type === 'session-data') {
