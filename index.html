@@ -39,6 +39,10 @@
             background: white;
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: inline-block; /* Asegura que el contenedor se ajuste al QR */
+        }
+        #qrcode-container img {
+            display: block; /* Evita espacios extra debajo de la imagen del QR */
         }
     </style>
 </head>
@@ -82,7 +86,7 @@
                     <div class="flex flex-col md:flex-row items-center justify-center gap-6 mt-4">
                         <div class="text-center">
                             <p class="text-sm">Escaneando el QR</p>
-                            <div id="qrcode-container" class="mt-2 inline-block"></div>
+                            <div id="qrcode-container" class="mt-2"></div>
                         </div>
                         <div class="text-center">
                             <p class="text-sm">O introduciendo el código</p>
@@ -207,8 +211,8 @@
             container.innerHTML = ''; // Limpia el QR anterior si existe
             new QRCode(container, {
                 text: url,
-                width: 128,
-                height: 128,
+                width: 200,  // <-- CÓDIGO QR MÁS GRANDE
+                height: 200, // <-- CÓDIGO QR MÁS GRANDE
                 colorDark : "#000000",
                 colorLight : "#ffffff",
                 correctLevel : QRCode.CorrectLevel.H
@@ -235,7 +239,9 @@
 
             sessionData = { question, options };
             
-            peer = new Peer(); 
+            // Genera un ID de sesión corto y aleatorio
+            const sessionId = Math.random().toString(36).substring(2, 8).toUpperCase();
+            peer = new Peer(sessionId); 
 
             peer.on('open', (id) => {
                 myPeerId = id;
