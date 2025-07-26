@@ -6,8 +6,8 @@
     <title>Votación en Tiempo Real con WebRTC</title>
     <!-- Tailwind CSS para un diseño rápido y moderno -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- PeerJS para la conexión WebRTC -->
-    <script src="https://unpkg.com/peerjs@1.4.7/dist/peer.min.js"></script>
+    <!-- PeerJS para la conexión WebRTC (ENLACE CORREGIDO) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.4.7/peerjs.min.js"></script>
     <!-- Google Fonts para una mejor tipografía -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -223,6 +223,10 @@
         function handleVote(optionIndex) {
             sessionData.options[optionIndex].votes++;
             updateResultsView(sessionData);
+            // Reenviar el estado actualizado a todos los alumnos (opcional, por si quieres mostrar resultados en vivo a todos)
+            // guestConnections.forEach(conn => {
+            //     conn.send({ type: 'session-data', payload: sessionData });
+            // });
         }
 
         function updateResultsView(data) {
@@ -275,16 +279,24 @@
                         updateVotingView(data.payload);
                     }
                 });
+                 hostConnection.on('error', (err) => {
+                    console.error('Error en la conexión:', err);
+                    showJoinError();
+                });
             });
             
             peer.on('error', (err) => {
-                console.error(err);
-                const errorP = document.getElementById('join-error');
-                errorP.innerText = "Error de conexión. Verifica el código o que el anfitrión esté conectado.";
-                errorP.classList.remove('hidden');
-                document.getElementById('join-button-text').classList.remove('hidden');
-                document.getElementById('join-loader').classList.add('hidden');
+                console.error('Error de PeerJS:', err);
+                showJoinError();
             });
+        }
+        
+        function showJoinError() {
+            const errorP = document.getElementById('join-error');
+            errorP.innerText = "Error de conexión. Verifica el código o que el anfitrión esté conectado.";
+            errorP.classList.remove('hidden');
+            document.getElementById('join-button-text').classList.remove('hidden');
+            document.getElementById('join-loader').classList.add('hidden');
         }
 
         function updateVotingView(data) {
