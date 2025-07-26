@@ -23,8 +23,8 @@
         }
         .loader {
             border: 4px solid #f3f3f3;
-            /* Color del loader cambiado a naranja */
-            border-top: 4px solid #f97316;
+            /* Color del loader cambiado a verde */
+            border-top: 4px solid #16a34a;
             border-radius: 50%;
             width: 24px;
             height: 24px;
@@ -35,14 +35,18 @@
             100% { transform: rotate(360deg); }
         }
         #qrcode-container {
-            padding: 10px;
+            padding: 1rem;
             background: white;
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            display: inline-block;
+            display: inline-flex; /* Usar inline-flex para centrar */
+            justify-content: center;
+            align-items: center;
         }
         #qrcode-container img {
             display: block;
+            width: 100%;
+            height: auto;
         }
         /* Estilos para el Modo Proyector */
         body.projection-mode {
@@ -76,7 +80,7 @@
 
         <!-- Selector de Idioma -->
         <div id="lang-selector-container" class="absolute top-4 right-4 z-10">
-            <select id="lang-selector" onchange="setLanguage(this.value)" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2">
+            <select id="lang-selector" onchange="setLanguage(this.value)" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-2">
                 <option value="es">Español</option>
                 <option value="ca">Català</option>
                 <option value="gl">Galego</option>
@@ -87,7 +91,7 @@
         <!-- Selector de Vista -->
         <div id="view-selector" class="mb-6 pt-8">
             <div class="flex border-b border-gray-200">
-                <button onclick="switchView('presenter')" id="presenter-tab" data-translate-key="presenter_tab" class="px-4 py-2 font-semibold text-orange-600 border-b-2 border-orange-600 focus:outline-none">Rol de presentación</button>
+                <button onclick="switchView('presenter')" id="presenter-tab" data-translate-key="presenter_tab" class="px-4 py-2 font-semibold text-green-600 border-b-2 border-green-600 focus:outline-none">Rol de presentación</button>
                 <button onclick="switchView('student')" id="student-tab" data-translate-key="student_tab" class="px-4 py-2 font-semibold text-gray-500 focus:outline-none">Participante</button>
             </div>
         </div>
@@ -98,7 +102,7 @@
                 <h2 class="text-2xl font-bold mb-4" data-translate-key="create_title">Crear una nueva votación</h2>
                 <div class="mb-4">
                     <label for="question" class="block text-sm font-medium text-gray-700 mb-1" data-translate-key="question_label">Tu pregunta:</label>
-                    <input type="text" id="question" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500" data-translate-key-placeholder="question_placeholder" placeholder="Ej: ¿Cuál es la capital de Cataluña?">
+                    <input type="text" id="question" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" data-translate-key-placeholder="question_placeholder" placeholder="Ej: ¿Cuál es la capital de Cataluña?">
                 </div>
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1" data-translate-key="options_label">Opciones de respuesta:</label>
@@ -106,9 +110,9 @@
                         <input type="text" name="option" class="w-full p-2 border border-gray-300 rounded-md shadow-sm" data-translate-key-placeholder="option_1_placeholder" placeholder="Opción 1">
                         <input type="text" name="option" class="w-full p-2 border border-gray-300 rounded-md shadow-sm" data-translate-key-placeholder="option_2_placeholder" placeholder="Opción 2">
                     </div>
-                    <button onclick="addOption()" class="mt-2 text-sm text-orange-600 hover:text-orange-800" data-translate-key="add_option_btn">+ Añadir opción</button>
+                    <button onclick="addOption()" class="mt-2 text-sm text-green-600 hover:text-green-800" data-translate-key="add_option_btn">+ Añadir opción</button>
                 </div>
-                <button onclick="hostSession()" id="host-button" class="w-full bg-orange-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-orange-700 transition duration-300 flex items-center justify-center">
+                <button onclick="hostSession()" id="host-button" class="w-full bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-700 transition duration-300 flex items-center justify-center">
                     <span id="host-button-text" data-translate-key="start_session_btn">Iniciar Sesión</span>
                     <div id="host-loader" class="loader hidden ml-3"></div>
                 </button>
@@ -117,12 +121,12 @@
             <div id="results-view" class="hidden">
                 <div class="flex flex-col lg:flex-row lg:gap-8">
                     <!-- Columna Izquierda: Info para compartir -->
-                    <div class="info-box lg:w-1/3 lg:flex-shrink-0 bg-orange-50 border border-orange-200 p-4 rounded-md mb-6 lg:mb-0">
-                        <p class="font-bold text-center mb-4 text-orange-800" data-translate-key="live_session_title">¡Sesión en vivo! Comparte:</p>
-                        <div class="flex flex-col items-center gap-y-4">
-                            <div class="text-center">
+                    <div class="info-box lg:w-2/5 xl:w-1/3 lg:flex-shrink-0 bg-green-50 border border-green-200 p-4 rounded-md mb-6 lg:mb-0 flex flex-col">
+                        <p class="font-bold text-center mb-4 text-green-800" data-translate-key="live_session_title">¡Sesión en vivo! Comparte:</p>
+                        <div class="flex flex-col items-center justify-center flex-grow gap-y-4">
+                            <div class="text-center w-full">
                                 <p class="text-sm" data-translate-key="scan_qr_label">Escaneando el QR</p>
-                                <div id="qrcode-container" class="mt-2"></div>
+                                <div id="qrcode-container" class="mt-2 w-full max-w-xs mx-auto"></div>
                             </div>
                             <div class="text-center">
                                 <p class="text-sm" data-translate-key="or_go_to_label">O yendo a:</p>
@@ -138,7 +142,6 @@
                          <div class="absolute -top-2 right-0">
                             <button id="projection-btn" onclick="toggleProjectionMode()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg inline-flex items-center text-sm transition-opacity duration-300">
                                 <svg id="projection-icon-enter" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"></path></svg>
-                                <!-- **NUEVO: Icono de salida corregido** -->
                                 <svg id="projection-icon-exit" class="w-4 h-4 mr-2 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9V4.5M15 9h4.5M15 9l5.25-5.25M15 15v4.5M15 15h4.5M15 15l5.25 5.25"></path></svg>
                                 <span data-translate-key="projection_btn_text">Proyectar</span>
                             </button>
@@ -158,8 +161,8 @@
             <div id="join-session-form">
                 <h2 class="text-2xl font-bold mb-4" data-translate-key="join_title">Unirse a una votación</h2>
                 <label for="code-input" class="block text-sm font-medium text-gray-700 mb-1" data-translate-key="session_code_label">Código de la sesión:</label>
-                <input type="text" id="code-input" class="w-full p-2 border uppercase border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500" data-translate-key-placeholder="code_input_placeholder" placeholder="Introduce el código">
-                <button onclick="joinSession()" id="join-button" class="mt-4 w-full bg-orange-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-orange-700 transition duration-300 flex items-center justify-center">
+                <input type="text" id="code-input" class="w-full p-2 border uppercase border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" data-translate-key-placeholder="code_input_placeholder" placeholder="Introduce el código">
+                <button onclick="joinSession()" id="join-button" class="mt-4 w-full bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-700 transition duration-300 flex items-center justify-center">
                     <span id="join-button-text" data-translate-key="join_btn">Unirse</span>
                     <div id="join-loader" class="loader hidden ml-3"></div>
                 </button>
@@ -382,17 +385,17 @@
             if (view === 'presenter') {
                 presenterView.style.display = 'block';
                 studentView.style.display = 'none';
-                presenterTab.classList.add('text-orange-600', 'border-orange-600');
+                presenterTab.classList.add('text-green-600', 'border-green-600');
                 presenterTab.classList.remove('text-gray-500');
                 studentTab.classList.add('text-gray-500');
-                studentTab.classList.remove('text-orange-600', 'border-orange-600');
+                studentTab.classList.remove('text-green-600', 'border-green-600');
             } else {
                 presenterView.style.display = 'none';
                 studentView.style.display = 'block';
-                studentTab.classList.add('text-orange-600', 'border-orange-600');
+                studentTab.classList.add('text-green-600', 'border-green-600');
                 studentTab.classList.remove('text-gray-500');
                 presenterTab.classList.add('text-gray-500');
-                presenterTab.classList.remove('text-orange-600', 'border-orange-600');
+                presenterTab.classList.remove('text-green-600', 'border-green-600');
             }
         };
 
@@ -422,8 +425,8 @@
             container.innerHTML = '';
             new QRCode(container, {
                 text: url,
-                width: 160,
-                height: 160,
+                width: 240, // **QR MÁS GRANDE**
+                height: 240, // **QR MÁS GRANDE**
                 colorDark : "#000000",
                 colorLight : "#ffffff",
                 correctLevel : QRCode.CorrectLevel.H
@@ -524,7 +527,7 @@
                         <span class="text-xl md:text-2xl font-bold text-gray-900">${option.votes} <span class="text-lg md:text-xl text-gray-600 font-medium">(${percentage.toFixed(0)}%)</span></span>
                     </div>
                     <div class="w-full bg-gray-200 rounded-full h-8 md:h-10">
-                        <div class="bg-orange-500 h-8 md:h-10 rounded-full bar-transition" style="width: ${percentage}%"></div>
+                        <div class="bg-green-500 h-8 md:h-10 rounded-full bar-transition" style="width: ${percentage}%"></div>
                     </div>
                 `;
                 resultsContainer.appendChild(resultElement);
@@ -591,7 +594,7 @@
 
             data.options.forEach((option, index) => {
                 const button = document.createElement('button');
-                button.className = "w-full text-left p-4 border border-gray-300 rounded-lg hover:bg-orange-50 hover:border-orange-400 transition duration-200";
+                button.className = "w-full text-left p-4 border border-gray-300 rounded-lg hover:bg-green-50 hover:border-green-400 transition duration-200";
                 button.innerText = option.text;
                 button.onclick = () => castVote(index);
                 optionsContainer.appendChild(button);
