@@ -49,6 +49,8 @@
         }
         #wordcloud-container {
             position: relative;
+            width: 100%;
+            height: 100%;
         }
         #wordcloud-container svg {
             display: block; margin: auto;
@@ -121,7 +123,8 @@
         }
         body.projection-mode #results-column {
             width: 100%;
-            max-width: 900px; /* Limit cloud width */
+            max-width: 90vw;
+            height: 80vh;
             padding: 0;
             background: transparent;
         }
@@ -219,8 +222,8 @@
                             <div>
                                 <label for="layout-selector" class="text-sm font-medium" data-translate-key="layout_label">Diseño:</label>
                                 <select id="layout-selector" onchange="changeLayout(this.value)" class="rounded-md border-gray-300 text-sm ml-2">
-                                    <option value="mixed" data-translate-key="layout_mixed">Mixto</option>
                                     <option value="horizontal" data-translate-key="layout_horizontal">Horizontal</option>
+                                    <option value="mixed" data-translate-key="layout_mixed">Mixto</option>
                                 </select>
                             </div>
                             <div class="flex gap-2">
@@ -317,10 +320,9 @@
             document.querySelectorAll('[data-translate-key]').forEach(el => {
                 const key = el.getAttribute('data-translate-key');
                 const translation = translations[lang][key];
-                if (translation && !el.querySelector('span')) { // Evitar sobreescribir si tiene hijos
+                if (translation && !el.querySelector('svg')) {
                      el.innerText = translation;
                 } else if (translation) {
-                    // Si tiene hijos (como el botón de proyectar), solo cambiar el texto del span
                     const textNode = Array.from(el.childNodes).find(node => node.nodeType === Node.TEXT_NODE || node.tagName === 'SPAN');
                     if(textNode) textNode.textContent = translation;
                 }
@@ -362,28 +364,38 @@
         let sessionData = {};
         let myWordsCount = 0;
         let sendTimeout = null;
-        let currentLayout = 'mixed';
+        let currentLayout = 'horizontal';
 
         // --- LÓGICA DE LA NUBE DE PALABRAS (D3.js) ---
-        const wc_width = 800;
-        const wc_height = 500;
         const colors = d3.scale.category10();
 
         function drawWordCloud() {
-            const wordList = Object.entries(wordCounts).map(([word, count]) => ({ text: word, size: 10 + count * 9, count: count }))
+            if (Object.keys(wordCounts).length === 0) {
+                d3.select("#wordcloud-container svg").remove();
+                return;
+            };
+
+            const cloudContainer = document.getElementById('wordcloud-container');
+            const width = cloudContainer.offsetWidth;
+            const height = cloudContainer.offsetHeight || width * 0.75;
+
+            const wordList = Object.entries(wordCounts).map(([word, count]) => ({ text: word, size: count, count: count }))
                                 .sort((a, b) => b.count - a.count);
 
-            const container = d3.select("#wordcloud-container svg");
-            if (container.empty()) {
-                 d3.select("#wordcloud-container").append("svg");
+            const counts = wordList.map(d => d.count);
+            const minCount = d3.min(counts);
+            const maxCount = d3.max(counts);
+
+            let fontScale;
+            if (minCount === maxCount) {
+                fontScale = d3.scale.linear().domain([0, minCount]).range([20, 150]);
+            } else {
+                fontScale = d3.scale.linear().domain([minCount, maxCount]).range([20, 150]);
             }
-            d3.select("#wordcloud-container svg").html("");
-
-            const tooltip = d3.select("#tooltip");
-
+            
             const layout = d3.layout.cloud()
-                .size([wc_width, wc_height])
-                .words(wordList)
+                .size([width, height])
+                .words(wordList.map(d => ({...d, size: fontScale(d.size)})))
                 .padding(5)
                 .rotate(() => {
                     if (currentLayout === 'horizontal') return 0;
@@ -394,10 +406,13 @@
             layout.start();
 
             function draw(words) {
-                const svg = d3.select("#wordcloud-container svg")
-                    .attr("width", layout.size()[0]).attr("height", layout.size()[1])
-                    .attr("viewBox", `0 0 ${layout.size()[0]} ${layout.size()[1]}`)
-                    .append("g").attr("transform", `translate(${layout.size()[0] / 2},${layout.size()[1] / 2})`);
+                d3.select("#wordcloud-container svg").remove();
+                const tooltip = d3.select("#tooltip");
+
+                const svg = d3.select("#wordcloud-container").append("svg")
+                    .attr("width", '100%').attr("height", '100%')
+                    .attr("viewBox", `0 0 ${width} ${height}`)
+                    .append("g").attr("transform", `translate(${width / 2},${height / 2})`);
                 
                 svg.selectAll("text").data(words).enter().append("text")
                     .attr("class", "word").style("font-size", d => `${d.size}px`)
@@ -467,6 +482,7 @@
                 window.removeEventListener('keydown', handleExitProjection);
                 document.getElementById('app').removeEventListener('click', handleExitProjection);
             }
+            setTimeout(drawWordCloud, 100); // Redraw after transition
         }
 
         function handleExitProjection(event) {
@@ -520,6 +536,7 @@
             };
             applyTheme(sessionData.themeColor);
             wordCounts = {};
+            currentLayout = document.getElementById('layout-selector').value;
             
             const sessionId = Math.random().toString(36).substring(2, 8).toUpperCase();
             peer = new Peer(sessionId);
@@ -580,7 +597,7 @@
         // --- LÓGICA DE EXPORTACIÓN ---
         function exportPNG() {
             const node = document.getElementById('wordcloud-container');
-            domtoimage.toBlob(node)
+            domtoimage.toBlob(node, { bgcolor: '#FFFFFF' })
                 .then(function (blob) {
                     window.saveAs(blob, 'nube-de-palabras.png');
                 });
@@ -590,7 +607,7 @@
             let csvContent = "data:text/csv;charset=utf-8,Palabra,Frecuencia\n";
             const wordList = Object.entries(wordCounts).sort((a, b) => b[1] - a[1]);
             wordList.forEach(function(rowArray) {
-                let row = rowArray.join(",");
+                let row = `"${rowArray[0]}",${rowArray[1]}`;
                 csvContent += row + "\n";
             });
             var encodedUri = encodeURI(csvContent);
@@ -731,6 +748,11 @@
             document.getElementById('color-picker').addEventListener('input', (event) => applyTheme(event.target.value));
             document.getElementById('word-input').addEventListener('keyup', (event) => {
                 if (event.key === 'Enter') sendWord();
+            });
+            window.addEventListener('resize', () => {
+                if(document.getElementById('results-view').offsetParent !== null) {
+                    drawWordCloud();
+                }
             });
         };
     </script>
