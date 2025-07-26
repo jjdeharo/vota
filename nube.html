@@ -85,13 +85,53 @@
             background-color: #fff; cursor: pointer; transition: background-color 0.2s;
         }
         #session-code:hover { background-color: #f9fafb; }
+        
+        /* Estilos para el Modo Proyector */
+        body.projection-mode {
+            overflow: hidden;
+        }
+        body.projection-mode #app {
+            max-width: 100%;
+            width: 100%;
+            height: 100vh;
+            border-radius: 0;
+            padding: 2rem;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        body.projection-mode #results-view {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        body.projection-mode .hide-on-projection {
+            display: none;
+        }
+        body.projection-mode #results-question {
+            font-size: 3rem; /* Make title bigger */
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        body.projection-mode #results-column {
+            width: 100%;
+            max-width: 900px; /* Limit cloud width */
+            padding: 0;
+            background: transparent;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex flex-col items-center justify-center min-h-screen p-4">
 
     <div id="app" class="w-full max-w-5xl mx-auto rounded-xl shadow-lg transition-all duration-300 relative">
         <!-- Selector de Idioma -->
-        <div id="lang-selector-container" class="absolute top-4 right-4 z-10">
+        <div id="lang-selector-container" class="absolute top-4 right-4 z-10 hide-on-projection">
             <select id="lang-selector" onchange="setLanguage(this.value)" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2">
                 <option value="es">Español</option>
                 <option value="ca">Català</option>
@@ -143,14 +183,19 @@
             <div id="results-view" class="hidden themed-content-bg p-6 md:p-8 rounded-xl">
                 <div class="flex justify-between items-start gap-4 mb-4">
                     <h2 id="results-question" class="text-4xl font-extrabold flex-grow text-gray-800"></h2>
-                    <div class="flex gap-2 flex-shrink-0">
+                    <div class="flex gap-2 flex-shrink-0 hide-on-projection">
+                        <button id="projection-btn" onclick="toggleProjectionMode()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg text-sm inline-flex items-center">
+                            <svg id="projection-icon-enter" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"></path></svg>
+                            <svg id="projection-icon-exit" class="w-4 h-4 mr-2 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9V4.5M15 9h4.5M15 9l5.25-5.25M15 15v4.5M15 15h4.5M15 15l5.25 5.25"></path></svg>
+                            <span data-translate-key="projection_btn_text">Proyectar</span>
+                        </button>
                         <button id="edit-btn" onclick="confirmEndSession()" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg text-sm">
                             <span data-translate-key="edit_btn_text">Editar</span>
                         </button>
                     </div>
                 </div>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div id="sharing-info-container" class="lg:col-span-1 space-y-6">
+                    <div id="sharing-info-container" class="lg:col-span-1 space-y-6 hide-on-projection">
                         <div class="bg-white/60 p-4 rounded-lg text-center backdrop-blur-sm">
                             <h3 class="font-bold mb-2 text-gray-700" data-translate-key="scan_qr_label">1. Escanea el QR</h3>
                             <div id="qrcode-container" class="mx-auto max-w-[200px]"></div>
@@ -170,7 +215,7 @@
                          <p id="participant-count" class="text-center text-sm text-gray-600 mt-4"></p>
                     </div>
                     <div id="results-column" class="lg:col-span-2 bg-white/60 rounded-lg p-4 min-h-[400px]">
-                        <div class="flex justify-between items-center mb-4">
+                        <div class="flex justify-between items-center mb-4 hide-on-projection">
                             <div>
                                 <label for="layout-selector" class="text-sm font-medium" data-translate-key="layout_label">Diseño:</label>
                                 <select id="layout-selector" onchange="changeLayout(this.value)" class="rounded-md border-gray-300 text-sm ml-2">
@@ -231,6 +276,12 @@
         </div>
     </div>
     
+    <footer class="text-center py-4 text-sm text-gray-500 hide-on-projection">
+        <span data-translate-key="footer_created_by">Aplicación creada por</span> <a href="https://bilateria.org" target="_blank" class="underline hover:text-gray-700">Juan José de Haro</a>
+        <br>
+        <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="license" class="underline hover:text-gray-700" data-translate-key="footer_license">Creative Commons Reconocimiento-CompartirIgual 4.0 Internacional</a>
+    </footer>
+
     <div id="toast" class="fixed bottom-5 right-5 bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg opacity-0 transition-opacity duration-300"></div>
 
     <!-- Modal de Confirmación -->
@@ -248,11 +299,11 @@
     <script>
         // --- LÓGICA DE INTERNACIONALIZACIÓN (i18n) ---
         const translations = {
-            'es': { 'create_title': 'Crear una nueva lluvia de ideas', 'question_label': 'Título o pregunta:', 'question_placeholder': 'Ej: ¿Qué es para ti la biología?', 'word_limit_label': 'Palabras por persona:', 'theme_color_label': 'Color del tema:', 'prepare_session_btn': 'Preparar sesión', 'start_session_btn': 'Iniciar Sesión', 'shareable_link_title': 'Enlace de preparación listo. Cópialo y guárdalo:', 'switch_to_participant': '¿Buscas unirte a una sesión? Haz clic aquí.', 'edit_btn_text': 'Editar', 'scan_qr_label': '1. Escanea el QR', 'direct_link_label': '2. O comparte el enlace', 'or_go_to': 'O ve a', 'and_enter_code': 'e introduce el código:', 'participant_count_text': 'Participantes conectados: {count}', 'join_title': 'Unirse a una sesión', 'session_code_label': 'Código de la sesión:', 'code_input_placeholder': 'Introduce el código', 'join_btn': 'Unirse', 'switch_to_presenter': '¿Eres el presentador? Inicia sesión aquí.', 'word_form_instructions': 'Escribe una palabra o frase corta y pulsa Enviar.', 'words_left_text': 'Te quedan {count} palabras.', 'word_input_placeholder': 'Escribe una palabra...', 'send_btn': 'Enviar', 'sent_confirmation_text': '¡Palabra enviada!', 'send_timeout_error': 'No se recibió respuesta. Inténtalo de nuevo.', 'completed_title': '¡Gracias por participar!', 'completed_subtitle': 'Has enviado todas tus palabras. Puedes ver los resultados en la pantalla principal.', 'copied_toast': 'Código copiado', 'link_copied_toast': 'Enlace copiado', 'url_copied_toast': 'URL copiada', 'alert_no_question': 'Por favor, introduce un título.', 'alert_connection_error': 'Error de conexión. Recarga la página.', 'join_error_text': 'Error de conexión. Verifica el código o que el anfitrión esté conectado.', 'confirm_end_title': '¿Finalizar sesión?', 'confirm_end_text': 'Esto terminará la sesión actual. Deberás compartir un nuevo código para que se unan de nuevo.', 'cancel_btn': 'Cancelar', 'end_session_btn': 'Finalizar', 'layout_label': 'Diseño:', 'layout_mixed': 'Mixto', 'layout_horizontal': 'Horizontal', 'export_png_btn': 'Exportar PNG', 'export_csv_btn': 'Exportar CSV'},
-            'ca': { 'create_title': 'Crear una nova pluja d\'idees', 'question_label': 'Títol o pregunta:', 'question_placeholder': 'Ex: Què és per a tu la biologia?', 'word_limit_label': 'Paraules per persona:', 'theme_color_label': 'Color del tema:', 'prepare_session_btn': 'Preparar sessió', 'start_session_btn': 'Iniciar Sessió', 'shareable_link_title': 'Enllaç de preparació a punt. Copia\'l i desa\'l:', 'switch_to_participant': 'Busques unir-te a una sessió? Fes clic aquí.', 'edit_btn_text': 'Editar', 'scan_qr_label': '1. Escaneja el QR', 'direct_link_label': '2. O comparteix l\'enllaç', 'or_go_to': 'O ves a', 'and_enter_code': 'i introdueix el codi:', 'participant_count_text': 'Participants connectats: {count}', 'join_title': 'Unir-se a una sessió', 'session_code_label': 'Codi de la sessió:', 'code_input_placeholder': 'Introdueix el codi', 'join_btn': 'Unir-se', 'switch_to_presenter': 'Ets el presentador? Inicia sessió aquí.', 'word_form_instructions': 'Escriu una paraula o frase curta i prem Enviar.', 'words_left_text': 'Et queden {count} paraules.', 'word_input_placeholder': 'Escriu una paraula...', 'send_btn': 'Enviar', 'sent_confirmation_text': 'Paraula enviada!', 'send_timeout_error': 'No s\'ha rebut resposta. Prova-ho de nou.', 'completed_title': 'Gràcies per participar!', 'completed_subtitle': 'Has enviat totes les teves paraules. Pots veure els resultats a la pantalla principal.', 'copied_toast': 'Codi copiat', 'link_copied_toast': 'Enllaç copiat', 'url_copied_toast': 'URL copiada', 'alert_no_question': 'Si us plau, introdueix un títol.', 'alert_connection_error': 'Error de connexió. Recarrega la pàgina.', 'join_error_text': 'Error de connexió. Verifica el codi o que l\'amfitrió estigui connectat.', 'confirm_end_title': 'Finalitzar la sessió?', 'confirm_end_text': 'Això acabarà la sessió actual. Hauràs de compartir un nou codi perquè s\'uneixin de nou.', 'cancel_btn': 'Cancel·lar', 'end_session_btn': 'Finalitzar', 'layout_label': 'Disseny:', 'layout_mixed': 'Mixt', 'layout_horizontal': 'Horitzontal', 'export_png_btn': 'Exportar PNG', 'export_csv_btn': 'Exportar CSV' },
-            'gl': { 'create_title': 'Crear unha nova chuvia de ideas', 'question_label': 'Título ou pregunta:', 'question_placeholder': 'Ex: Que é para ti a bioloxía?', 'word_limit_label': 'Palabras por persoa:', 'theme_color_label': 'Cor do tema:', 'prepare_session_btn': 'Preparar sesión', 'start_session_btn': 'Iniciar Sesión', 'shareable_link_title': 'Ligazón de preparación lista. Cópiaa e gárdaa:', 'switch_to_participant': 'Buscas unirte a unha sesión? Fai clic aquí.', 'edit_btn_text': 'Editar', 'scan_qr_label': '1. Escanea o QR', 'direct_link_label': '2. Ou comparte a ligazón', 'or_go_to': 'Ou vai a', 'and_enter_code': 'e introduce o código:', 'participant_count_text': 'Participantes conectados: {count}', 'join_title': 'Unirse a unha sesión', 'session_code_label': 'Código da sesión:', 'code_input_placeholder': 'Introduce o código', 'join_btn': 'Unirse', 'switch_to_presenter': 'Es o presentador? Inicia sesión aquí.', 'word_form_instructions': 'Escribe unha palabra ou frase curta e preme Enviar.', 'words_left_text': 'Quédanche {count} palabras.', 'word_input_placeholder': 'Escribe unha palabra...', 'send_btn': 'Enviar', 'sent_confirmation_text': 'Palabra enviada!', 'send_timeout_error': 'Non se recibiu resposta. Téntao de novo.', 'completed_title': 'Grazas por participar!', 'completed_subtitle': 'Enviaches todas as túas palabras. Podes ver os resultados na pantalla principal.', 'copied_toast': 'Código copiado', 'link_copied_toast': 'Ligazón copiada', 'url_copied_toast': 'URL copiada', 'alert_no_question': 'Por favor, introduce un título.', 'alert_connection_error': 'Erro de conexión. Recarga a páxina.', 'join_error_text': 'Erro de conexión. Verifica o código ou que o anfitrión estea conectado.', 'confirm_end_title': 'Finalizar a sesión?', 'confirm_end_text': 'Isto rematará a sesión actual. Deberás compartir un novo código para que se unan de novo.', 'cancel_btn': 'Cancelar', 'end_session_btn': 'Finalizar', 'layout_label': 'Deseño:', 'layout_mixed': 'Mixto', 'layout_horizontal': 'Horizontal', 'export_png_btn': 'Exportar PNG', 'export_csv_btn': 'Exportar CSV' },
-            'eu': { 'create_title': 'Ideia-jasa berria sortu', 'question_label': 'Izenburua edo galdera:', 'question_placeholder': 'Adib: Zer da zuretzat biologia?', 'word_limit_label': 'Hitzak pertsonako:', 'theme_color_label': 'Gaiaren kolorea:', 'prepare_session_btn': 'Saioa prestatu', 'start_session_btn': 'Saioa Hasi', 'shareable_link_title': 'Prestatzeko esteka prest. Kopiatu eta gorde:', 'switch_to_participant': 'Saio batean sartu nahi duzu? Egin klik hemen.', 'edit_btn_text': 'Editatu', 'scan_qr_label': '1. Eskaneatu QR-a', 'direct_link_label': '2. Edo partekatu esteka', 'or_go_to': 'Edo joan hona', 'and_enter_code': 'eta sartu kodea:', 'participant_count_text': 'Konektatutako parte-hartzaileak: {count}', 'join_title': 'Saio batean sartu', 'session_code_label': 'Saioaren kodea:', 'code_input_placeholder': 'Sartu kodea', 'join_btn': 'Sartu', 'switch_to_presenter': 'Aurkezlea zara? Hasi saioa hemen.', 'word_form_instructions': 'Idatzi hitz edo esaldi labur bat eta sakatu Bidali.', 'words_left_text': '{count} hitz geratzen zaizkizu.', 'word_input_placeholder': 'Idatzi hitz bat...', 'send_btn': 'Bidali', 'sent_confirmation_text': 'Hitza bidali da!', 'send_timeout_error': 'Ez da erantzunik jaso. Saiatu berriro.', 'completed_title': 'Eskerrik asko parte hartzeagatik!', 'completed_subtitle': 'Zure hitz guztiak bidali dituzu. Emaitzak pantaila nagusian ikus ditzakezu.', 'copied_toast': 'Kodea kopiatu da', 'link_copied_toast': 'Esteka kopiatu da', 'url_copied_toast': 'URLa kopiatu da', 'alert_no_question': 'Mesedez, sartu izenburu bat.', 'alert_connection_error': 'Konexio-errorea. Birkargatu orria.', 'join_error_text': 'Konexio-errorea. Egiaztatu kodea edo antolatzailea konektatuta dagoela.', 'confirm_end_title': 'Saioa amaitu?', 'confirm_end_text': 'Honek uneko saioa amaituko du. Kode berri bat partekatu beharko duzu berriro sartzeko.', 'cancel_btn': 'Ezeztatu', 'end_session_btn': 'Amaitu', 'layout_label': 'Diseinua:', 'layout_mixed': 'Mistoa', 'layout_horizontal': 'Horizontala', 'export_png_btn': 'Esportatu PNG', 'export_csv_btn': 'Esportatu CSV' },
-            'en': { 'create_title': 'Create a new brainstorm', 'question_label': 'Title or question:', 'question_placeholder': 'E.g., What is biology to you?', 'word_limit_label': 'Words per person:', 'theme_color_label': 'Theme color:', 'prepare_session_btn': 'Prepare session', 'start_session_btn': 'Start Session', 'shareable_link_title': 'Preparation link ready. Copy and save it:', 'switch_to_participant': 'Looking to join a session? Click here.', 'edit_btn_text': 'Edit', 'scan_qr_label': '1. Scan the QR', 'direct_link_label': '2. Or share the link', 'or_go_to': 'Or go to', 'and_enter_code': 'and enter the code:', 'participant_count_text': 'Connected participants: {count}', 'join_title': 'Join a session', 'session_code_label': 'Session code:', 'code_input_placeholder': 'Enter code', 'join_btn': 'Join', 'switch_to_presenter': 'Are you the presenter? Log in here.', 'word_form_instructions': 'Type a word or short phrase and press Send.', 'words_left_text': 'You have {count} words left.', 'word_input_placeholder': 'Type a word...', 'send_btn': 'Send', 'sent_confirmation_text': 'Word sent!', 'send_timeout_error': 'No response received. Please try again.', 'completed_title': 'Thanks for participating!', 'completed_subtitle': 'You have sent all your words. You can see the results on the main screen.', 'copied_toast': 'Code copied', 'link_copied_toast': 'Link copied', 'url_copied_toast': 'URL copied', 'alert_no_question': 'Please enter a title.', 'alert_connection_error': 'Connection error. Please reload the page.', 'join_error_text': 'Connection error. Check the code or that the host is connected.', 'confirm_end_title': 'End session?', 'confirm_end_text': 'This will end the current session. You will need to share a new code for them to join again.', 'cancel_btn': 'Cancel', 'end_session_btn': 'End Session', 'layout_label': 'Layout:', 'layout_mixed': 'Mixed', 'layout_horizontal': 'Horizontal', 'export_png_btn': 'Export PNG', 'export_csv_btn': 'Export CSV' }
+            'es': { 'create_title': 'Crear una nueva lluvia de ideas', 'question_label': 'Título o pregunta:', 'question_placeholder': 'Ej: ¿Qué es para ti la biología?', 'word_limit_label': 'Palabras por persona:', 'theme_color_label': 'Color del tema:', 'prepare_session_btn': 'Preparar sesión', 'start_session_btn': 'Iniciar Sesión', 'shareable_link_title': 'Enlace de preparación listo. Cópialo y guárdalo:', 'switch_to_participant': '¿Buscas unirte a una sesión? Haz clic aquí.', 'edit_btn_text': 'Editar', 'scan_qr_label': '1. Escanea el QR', 'direct_link_label': '2. O comparte el enlace', 'or_go_to': 'O ve a', 'and_enter_code': 'e introduce el código:', 'participant_count_text': 'Participantes conectados: {count}', 'join_title': 'Unirse a una sesión', 'session_code_label': 'Código de la sesión:', 'code_input_placeholder': 'Introduce el código', 'join_btn': 'Unirse', 'switch_to_presenter': '¿Eres el presentador? Inicia sesión aquí.', 'word_form_instructions': 'Escribe una palabra o frase corta y pulsa Enviar.', 'words_left_text': 'Te quedan {count} palabras.', 'word_input_placeholder': 'Escribe una palabra...', 'send_btn': 'Enviar', 'sent_confirmation_text': '¡Palabra enviada!', 'send_timeout_error': 'No se recibió respuesta. Inténtalo de nuevo.', 'completed_title': '¡Gracias por participar!', 'completed_subtitle': 'Has enviado todas tus palabras. Puedes ver los resultados en la pantalla principal.', 'copied_toast': 'Código copiado', 'link_copied_toast': 'Enlace copiado', 'url_copied_toast': 'URL copiada', 'alert_no_question': 'Por favor, introduce un título.', 'alert_connection_error': 'Error de conexión. Recarga la página.', 'join_error_text': 'Error de conexión. Verifica el código o que el anfitrión esté conectado.', 'confirm_end_title': '¿Finalizar sesión?', 'confirm_end_text': 'Esto terminará la sesión actual. Deberás compartir un nuevo código para que se unan de nuevo.', 'cancel_btn': 'Cancelar', 'end_session_btn': 'Finalizar', 'layout_label': 'Diseño:', 'layout_mixed': 'Mixto', 'layout_horizontal': 'Horizontal', 'export_png_btn': 'Exportar PNG', 'export_csv_btn': 'Exportar CSV', 'projection_btn_text': 'Proyectar', 'projection_btn_exit_text': 'Salir del proyector', 'footer_created_by': 'Aplicación creada por', 'footer_license': 'Creative Commons Reconocimiento-CompartirIgual 4.0 Internacional'},
+            'ca': { 'create_title': 'Crear una nova pluja d\'idees', 'question_label': 'Títol o pregunta:', 'question_placeholder': 'Ex: Què és per a tu la biologia?', 'word_limit_label': 'Paraules per persona:', 'theme_color_label': 'Color del tema:', 'prepare_session_btn': 'Preparar sessió', 'start_session_btn': 'Iniciar Sessió', 'shareable_link_title': 'Enllaç de preparació a punt. Copia\'l i desa\'l:', 'switch_to_participant': 'Busques unir-te a una sessió? Fes clic aquí.', 'edit_btn_text': 'Editar', 'scan_qr_label': '1. Escaneja el QR', 'direct_link_label': '2. O comparteix l\'enllaç', 'or_go_to': 'O ves a', 'and_enter_code': 'i introdueix el codi:', 'participant_count_text': 'Participants connectats: {count}', 'join_title': 'Unir-se a una sessió', 'session_code_label': 'Codi de la sessió:', 'code_input_placeholder': 'Introdueix el codi', 'join_btn': 'Unir-se', 'switch_to_presenter': 'Ets el presentador? Inicia sessió aquí.', 'word_form_instructions': 'Escriu una paraula o frase curta i prem Enviar.', 'words_left_text': 'Et queden {count} paraules.', 'word_input_placeholder': 'Escriu una paraula...', 'send_btn': 'Enviar', 'sent_confirmation_text': 'Paraula enviada!', 'send_timeout_error': 'No s\'ha rebut resposta. Prova-ho de nou.', 'completed_title': 'Gràcies per participar!', 'completed_subtitle': 'Has enviat totes les teves paraules. Pots veure els resultats a la pantalla principal.', 'copied_toast': 'Codi copiat', 'link_copied_toast': 'Enllaç copiat', 'url_copied_toast': 'URL copiada', 'alert_no_question': 'Si us plau, introdueix un títol.', 'alert_connection_error': 'Error de connexió. Recarrega la pàgina.', 'join_error_text': 'Error de connexió. Verifica el codi o que l\'amfitrió estigui connectat.', 'confirm_end_title': 'Finalitzar la sessió?', 'confirm_end_text': 'Això acabarà la sessió actual. Hauràs de compartir un nou codi perquè s\'uneixin de nou.', 'cancel_btn': 'Cancel·lar', 'end_session_btn': 'Finalitzar', 'layout_label': 'Disseny:', 'layout_mixed': 'Mixt', 'layout_horizontal': 'Horitzontal', 'export_png_btn': 'Exportar PNG', 'export_csv_btn': 'Exportar CSV', 'projection_btn_text': 'Projectar', 'projection_btn_exit_text': 'Sortir del projector', 'footer_created_by': 'Aplicació creada per', 'footer_license': 'Creative Commons Reconeixement-CompartirIgual 4.0 Internacional' },
+            'gl': { 'create_title': 'Crear unha nova chuvia de ideas', 'question_label': 'Título ou pregunta:', 'question_placeholder': 'Ex: Que é para ti a bioloxía?', 'word_limit_label': 'Palabras por persoa:', 'theme_color_label': 'Cor do tema:', 'prepare_session_btn': 'Preparar sesión', 'start_session_btn': 'Iniciar Sesión', 'shareable_link_title': 'Ligazón de preparación lista. Cópiaa e gárdaa:', 'switch_to_participant': 'Buscas unirte a unha sesión? Fai clic aquí.', 'edit_btn_text': 'Editar', 'scan_qr_label': '1. Escanea o QR', 'direct_link_label': '2. Ou comparte a ligazón', 'or_go_to': 'Ou vai a', 'and_enter_code': 'e introduce o código:', 'participant_count_text': 'Participantes conectados: {count}', 'join_title': 'Unirse a unha sesión', 'session_code_label': 'Código da sesión:', 'code_input_placeholder': 'Introduce o código', 'join_btn': 'Unirse', 'switch_to_presenter': 'Es o presentador? Inicia sesión aquí.', 'word_form_instructions': 'Escribe unha palabra ou frase curta e preme Enviar.', 'words_left_text': 'Quédanche {count} palabras.', 'word_input_placeholder': 'Escribe unha palabra...', 'send_btn': 'Enviar', 'sent_confirmation_text': 'Palabra enviada!', 'send_timeout_error': 'Non se recibiu resposta. Téntao de novo.', 'completed_title': 'Grazas por participar!', 'completed_subtitle': 'Enviaches todas as túas palabras. Podes ver os resultados na pantalla principal.', 'copied_toast': 'Código copiado', 'link_copied_toast': 'Ligazón copiada', 'url_copied_toast': 'URL copiada', 'alert_no_question': 'Por favor, introduce un título.', 'alert_connection_error': 'Erro de conexión. Recarga a páxina.', 'join_error_text': 'Erro de conexión. Verifica o código ou que o anfitrión estea conectado.', 'confirm_end_title': 'Finalizar a sesión?', 'confirm_end_text': 'Isto rematará a sesión actual. Deberás compartir un novo código para que se unan de novo.', 'cancel_btn': 'Cancelar', 'end_session_btn': 'Finalizar', 'layout_label': 'Deseño:', 'layout_mixed': 'Mixto', 'layout_horizontal': 'Horizontal', 'export_png_btn': 'Exportar PNG', 'export_csv_btn': 'Exportar CSV', 'projection_btn_text': 'Proxectar', 'projection_btn_exit_text': 'Saír do proxector', 'footer_created_by': 'Aplicación creada por', 'footer_license': 'Creative Commons Recoñecemento-CompartirIgual 4.0 Internacional' },
+            'eu': { 'create_title': 'Ideia-jasa berria sortu', 'question_label': 'Izenburua edo galdera:', 'question_placeholder': 'Adib: Zer da zuretzat biologia?', 'word_limit_label': 'Hitzak pertsonako:', 'theme_color_label': 'Gaiaren kolorea:', 'prepare_session_btn': 'Saioa prestatu', 'start_session_btn': 'Saioa Hasi', 'shareable_link_title': 'Prestatzeko esteka prest. Kopiatu eta gorde:', 'switch_to_participant': 'Saio batean sartu nahi duzu? Egin klik hemen.', 'edit_btn_text': 'Editatu', 'scan_qr_label': '1. Eskaneatu QR-a', 'direct_link_label': '2. Edo partekatu esteka', 'or_go_to': 'Edo joan hona', 'and_enter_code': 'eta sartu kodea:', 'participant_count_text': 'Konektatutako parte-hartzaileak: {count}', 'join_title': 'Saio batean sartu', 'session_code_label': 'Saioaren kodea:', 'code_input_placeholder': 'Sartu kodea', 'join_btn': 'Sartu', 'switch_to_presenter': 'Aurkezlea zara? Hasi saioa hemen.', 'word_form_instructions': 'Idatzi hitz edo esaldi labur bat eta sakatu Bidali.', 'words_left_text': '{count} hitz geratzen zaizkizu.', 'word_input_placeholder': 'Idatzi hitz bat...', 'send_btn': 'Bidali', 'sent_confirmation_text': 'Hitza bidali da!', 'send_timeout_error': 'Ez da erantzunik jaso. Saiatu berriro.', 'completed_title': 'Eskerrik asko parte hartzeagatik!', 'completed_subtitle': 'Zure hitz guztiak bidali dituzu. Emaitzak pantaila nagusian ikus ditzakezu.', 'copied_toast': 'Kodea kopiatu da', 'link_copied_toast': 'Esteka kopiatu da', 'url_copied_toast': 'URLa kopiatu da', 'alert_no_question': 'Mesedez, sartu izenburu bat.', 'alert_connection_error': 'Konexio-errorea. Birkargatu orria.', 'join_error_text': 'Konexio-errorea. Egiaztatu kodea edo antolatzailea konektatuta dagoela.', 'confirm_end_title': 'Saioa amaitu?', 'confirm_end_text': 'Honek uneko saioa amaituko du. Kode berri bat partekatu beharko duzu berriro sartzeko.', 'cancel_btn': 'Ezeztatu', 'end_session_btn': 'Amaitu', 'layout_label': 'Diseinua:', 'layout_mixed': 'Mistoa', 'layout_horizontal': 'Horizontala', 'export_png_btn': 'Esportatu PNG', 'export_csv_btn': 'Esportatu CSV', 'projection_btn_text': 'Proiektatu', 'projection_btn_exit_text': 'Proiektoretik irten', 'footer_created_by': 'Aplikazioa, egilea:', 'footer_license': 'Creative Commons Aitortu-PartekatuBerdin 4.0 Nazioartekoa' },
+            'en': { 'create_title': 'Create a new brainstorm', 'question_label': 'Title or question:', 'question_placeholder': 'E.g., What is biology to you?', 'word_limit_label': 'Words per person:', 'theme_color_label': 'Theme color:', 'prepare_session_btn': 'Prepare session', 'start_session_btn': 'Start Session', 'shareable_link_title': 'Preparation link ready. Copy and save it:', 'switch_to_participant': 'Looking to join a session? Click here.', 'edit_btn_text': 'Edit', 'scan_qr_label': '1. Scan the QR', 'direct_link_label': '2. Or share the link', 'or_go_to': 'Or go to', 'and_enter_code': 'and enter the code:', 'participant_count_text': 'Connected participants: {count}', 'join_title': 'Join a session', 'session_code_label': 'Session code:', 'code_input_placeholder': 'Enter code', 'join_btn': 'Join', 'switch_to_presenter': 'Are you the presenter? Log in here.', 'word_form_instructions': 'Type a word or short phrase and press Send.', 'words_left_text': 'You have {count} words left.', 'word_input_placeholder': 'Type a word...', 'send_btn': 'Send', 'sent_confirmation_text': 'Word sent!', 'send_timeout_error': 'No response received. Please try again.', 'completed_title': 'Thanks for participating!', 'completed_subtitle': 'You have sent all your words. You can see the results on the main screen.', 'copied_toast': 'Code copied', 'link_copied_toast': 'Link copied', 'url_copied_toast': 'URL copied', 'alert_no_question': 'Please enter a title.', 'alert_connection_error': 'Connection error. Please reload the page.', 'join_error_text': 'Connection error. Check the code or that the host is connected.', 'confirm_end_title': 'End session?', 'confirm_end_text': 'This will end the current session. You will need to share a new code for them to join again.', 'cancel_btn': 'Cancel', 'end_session_btn': 'End Session', 'layout_label': 'Layout:', 'layout_mixed': 'Mixed', 'layout_horizontal': 'Horizontal', 'export_png_btn': 'Export PNG', 'export_csv_btn': 'Export CSV', 'projection_btn_text': 'Project', 'projection_btn_exit_text': 'Exit projector', 'footer_created_by': 'Application created by', 'footer_license': 'Creative Commons Attribution-ShareAlike 4.0 International' }
         };
         let currentLang = 'es';
 
@@ -265,7 +316,14 @@
 
             document.querySelectorAll('[data-translate-key]').forEach(el => {
                 const key = el.getAttribute('data-translate-key');
-                if (translations[lang] && translations[lang][key]) el.innerText = translations[lang][key];
+                const translation = translations[lang][key];
+                if (translation && !el.querySelector('span')) { // Evitar sobreescribir si tiene hijos
+                     el.innerText = translation;
+                } else if (translation) {
+                    // Si tiene hijos (como el botón de proyectar), solo cambiar el texto del span
+                    const textNode = Array.from(el.childNodes).find(node => node.nodeType === Node.TEXT_NODE || node.tagName === 'SPAN');
+                    if(textNode) textNode.textContent = translation;
+                }
             });
              document.querySelectorAll('[data-translate-key-placeholder]').forEach(el => {
                 const key = el.getAttribute('data-translate-key-placeholder');
@@ -307,8 +365,8 @@
         let currentLayout = 'mixed';
 
         // --- LÓGICA DE LA NUBE DE PALABRAS (D3.js) ---
-        const wc_width = 600;
-        const wc_height = 400;
+        const wc_width = 800;
+        const wc_height = 500;
         const colors = d3.scale.category10();
 
         function drawWordCloud() {
@@ -392,6 +450,33 @@
         function confirmEndSession() { document.getElementById('confirm-modal').classList.remove('hidden'); }
         function closeModal() { document.getElementById('confirm-modal').classList.add('hidden'); }
         
+        function toggleProjectionMode() {
+            const isEntering = !document.body.classList.contains('projection-mode');
+            document.body.classList.toggle('projection-mode');
+
+            const btnText = document.querySelector('#projection-btn span');
+            document.getElementById('projection-icon-enter').classList.toggle('hidden');
+            document.getElementById('projection-icon-exit').classList.toggle('hidden');
+
+            if (isEntering) {
+                btnText.innerText = translations[currentLang]['projection_btn_exit_text'];
+                window.addEventListener('keydown', handleExitProjection);
+                document.getElementById('app').addEventListener('click', handleExitProjection);
+            } else {
+                btnText.innerText = translations[currentLang]['projection_btn_text'];
+                window.removeEventListener('keydown', handleExitProjection);
+                document.getElementById('app').removeEventListener('click', handleExitProjection);
+            }
+        }
+
+        function handleExitProjection(event) {
+            if ((event.type === 'keydown' && event.key === 'Escape') || (event.type === 'click' && event.target.id === 'app')) {
+                if (document.body.classList.contains('projection-mode')) {
+                    toggleProjectionMode();
+                }
+            }
+        }
+
         function endSessionAndEdit() {
             guestConnections.forEach(conn => conn.close());
             guestConnections = [];
