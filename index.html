@@ -132,7 +132,6 @@
             
             <div id="results-view" class="hidden">
                 <div class="flex flex-col lg:flex-row lg:gap-8">
-                    <!-- **NUEVO: Ancho de columna ajustado para QR más grande** -->
                     <div class="info-box lg:w-1/2 xl:w-2/5 lg:flex-shrink-0 bg-green-50 border border-green-200 p-4 rounded-md mb-6 lg:mb-0 flex flex-col">
                         <p class="font-bold text-center mb-4 text-green-800" data-translate-key="live_session_title">¡Sesión en vivo! Comparte:</p>
                         <div class="flex flex-col items-center justify-center flex-grow gap-y-4">
@@ -464,10 +463,11 @@
         function generateQRCode(url) {
             const container = document.getElementById('qrcode-container');
             container.innerHTML = '';
+            // **NUEVO: Tamaño fijo y grande para el QR**
             new QRCode(container, {
                 text: url,
-                width: container.clientWidth,
-                height: container.clientWidth,
+                width: 280,
+                height: 280,
                 colorDark : "#000000",
                 colorLight : "#ffffff",
                 correctLevel : QRCode.CorrectLevel.H
