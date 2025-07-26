@@ -136,8 +136,14 @@
             width: 100%;
             max-width: 90vw;
             height: 80vh;
-            padding: 0;
-            background-color: var(--theme-color-content-bg);
+            padding: 1rem;
+        }
+        body.projection-mode #results-view .grid {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
         }
     </style>
 </head>
@@ -395,8 +401,8 @@
                                 .sort((a, b) => b.count - a.count);
 
             const counts = wordList.map(d => d.count);
-            const minCount = d3.min(counts);
-            const maxCount = d3.max(counts);
+            const minCount = d3.min(counts) || 1;
+            const maxCount = d3.max(counts) || 1;
             
             const numWords = wordList.length;
             const maxFontSize = Math.min(width / 5, Math.max(40, 150 - numWords * 2));
