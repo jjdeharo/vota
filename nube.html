@@ -37,7 +37,10 @@
             transition: all 0.3s ease-in-out;
             position: relative;
             z-index: 1;
-            max-height: calc(100vh - var(--footer-h) - var(--body-gap));
+            height: calc(100vh - var(--footer-h) - var(--body-gap));
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
         .loader {
             border: 4px solid #f3f3f3;
@@ -163,9 +166,12 @@
             padding: 1rem !important;
             height: 100%;
             min-height: 480px;
+            display: flex;
+            flex-direction: column;
         }
-        #results-view .grid {
-            height: 100%;
+        #results-view > .grid {
+            flex: 1 1 auto;
+            min-height: 0;
             align-items: stretch;
             gap: 1rem;
         }
@@ -422,6 +428,7 @@
 
         function getAvailableBox() {
             const inProjection = document.body.classList.contains('projection-mode');
+
             if (inProjection) {
                 const rv = document.getElementById('results-view');
                 const q  = document.getElementById('results-question');
@@ -429,17 +436,25 @@
                 const padX = parseFloat(rvStyles.paddingLeft) + parseFloat(rvStyles.paddingRight);
                 const padY = parseFloat(rvStyles.paddingTop)  + parseFloat(rvStyles.paddingBottom);
                 const width  = rv.clientWidth  - padX;
-                const height = rv.clientHeight - padY - q.offsetHeight - 8; // pequeño margen
+                const height = rv.clientHeight - padY - q.offsetHeight - 8;
                 return { width: Math.max(0, width), height: Math.max(0, height) };
             } else {
                 const parent = document.getElementById('results-column');
                 const styles = getComputedStyle(parent);
                 const padX = parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight);
                 const padY = parseFloat(styles.paddingTop)  + parseFloat(styles.paddingBottom);
-                return {
-                    width:  parent.clientWidth  - padX,
-                    height: parent.clientHeight - padY
-                };
+
+                const headerBar = parent.querySelector('.hide-on-projection');
+                let headerH = 0;
+                if (headerBar && headerBar.offsetParent !== null) {
+                    const hs = getComputedStyle(headerBar);
+                    headerH = headerBar.offsetHeight + parseFloat(hs.marginTop) + parseFloat(hs.marginBottom);
+                }
+
+                const width  = parent.clientWidth  - padX;
+                const height = parent.clientHeight - padY - headerH;
+
+                return { width: Math.max(0, width), height: Math.max(0, height) };
             }
         }
 
