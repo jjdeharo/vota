@@ -152,6 +152,27 @@
             width: 100%;
             gap: 0;
         }
+        
+        /* Ajustes de altura y scroll para vista normal */
+        #results-view {
+            padding: 1rem !important;
+            height: calc(100vh - 160px);
+            min-height: 480px;
+        }
+        #results-view .grid {
+            height: 100%;
+            align-items: stretch;
+            gap: 1rem;
+        }
+        #results-column {
+            height: 100%;
+            min-height: 0;
+            overflow: hidden;
+        }
+        #sharing-info-container {
+            overflow: auto;
+            max-height: 100%;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex flex-col items-center justify-center min-h-screen p-4">
@@ -426,37 +447,55 @@
             const { width, height } = getAvailableBox();
 
             const wordList = Object.entries(wordCounts)
-                .map(([word, count]) => ({ text: word, size: count, count }))
+                .map(([word, count]) => ({ text: word, count }))
                 .sort((a, b) => b.count - a.count);
 
             const counts   = wordList.map(d => d.count);
             const minCount = d3.min(counts) || 1;
             const maxCount = d3.max(counts) || 1;
 
-            const numWords = wordList.length;
+            const baseSide    = Math.min(width, height);
+            const maxFontBase = Math.max(48, Math.min(baseSide / 2.2, 280));
+            const minFontBase = Math.max(18, maxFontBase / 6);
 
-            const base = Math.min(width, height);
-            const maxFontSize = Math.max(48, Math.min(base / 2.2, 280));
-            const minFontSize = Math.max(18, maxFontSize / 6);
+            let baseScale = (minCount === maxCount)
+                ? d3.scale.linear().domain([0, maxCount]).range([minFontBase, maxFontBase])
+                : d3.scale.log().domain([minCount, maxCount]).range([minFontBase, maxFontBase]);
 
-            let fontScale;
-            if (minCount === maxCount) {
-                fontScale = d3.scale.linear().domain([0, maxCount]).range([minFontSize, maxFontSize]);
-            } else {
-                fontScale = d3.scale.log().domain([minCount, maxCount]).range([minFontSize, maxFontSize]);
+            const wordsWithBase = wordList.map(d => ({ ...d, baseSize: baseScale(d.count) }));
+
+            function attempt(scale, triesLeft) {
+                const wordsForLayout = wordsWithBase.map(d => ({
+                    text: d.text,
+                    size: d.baseSize * scale,
+                    count: d.count
+                }));
+
+                let placed = [];
+
+                const layout = d3.layout.cloud()
+                    .size([width, height])
+                    .words(wordsForLayout)
+                    .padding(2)
+                    .rotate(() => currentLayout === 'horizontal' ? 0 : (~~(Math.random() * 2) * 90))
+                    .fontSize(d => d.size)
+                    .on("end", function(w){
+                        placed = w;
+                        const allPlaced = placed.length === wordsWithBase.length;
+
+                        if (!allPlaced && triesLeft > 0) {
+                            attempt(scale * 0.9, triesLeft - 1);
+                        } else {
+                            render(placed);
+                        }
+                    });
+
+                layout.start();
             }
 
-            const layout = d3.layout.cloud()
-                .size([width, height])
-                .words(wordList.map(d => ({ ...d, size: fontScale(d.size) })))
-                .padding(2)
-                .rotate(() => currentLayout === 'horizontal' ? 0 : (~~(Math.random() * 2) * 90))
-                .fontSize(d => d.size)
-                .on("end", draw);
+            attempt(1.0, 8); // hasta 8 reintentos
 
-            layout.start();
-
-            function draw(words) {
+            function render(words) {
                 d3.select("#wordcloud-container svg").remove();
                 const tooltip = d3.select("#tooltip");
 
@@ -481,7 +520,7 @@
                             .style("left", (d3.event.pageX + 5) + "px")
                             .style("top",  (d3.event.pageY - 28) + "px");
                     })
-                    .on("mouseout", function() { tooltip.style("opacity", 0); });
+                    .on("mouseout", function(){ tooltip.style("opacity", 0); });
             }
         }
         
