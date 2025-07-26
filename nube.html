@@ -54,6 +54,7 @@
             position: relative;
             width: 100%;
             height: 100%;
+            min-height: 0;
         }
         #wordcloud-container svg {
             display: block; margin: auto;
@@ -128,15 +129,18 @@
         body.projection-mode #results-question {
             font-size: 2.5rem;
             text-align: center;
-            margin-bottom: 1rem;
+            margin: 0 0 0.5rem 0;
             flex-shrink: 0;
         }
         body.projection-mode #results-column {
             width: 100%;
-            max-width: 95vw;
-            flex-grow: 1;
+            max-width: 100vw;
+            flex: 1 1 auto;
             min-height: 0;
-            padding: 1rem;
+            padding: 0;
+            background: transparent;
+            border-radius: 0;
+            box-shadow: none;
             overflow: hidden;
         }
         body.projection-mode #results-view .grid {
@@ -146,6 +150,7 @@
             justify-content: flex-start;
             height: 100%;
             width: 100%;
+            gap: 0;
         }
     </style>
 </head>
@@ -389,45 +394,66 @@
         // --- LÓGICA DE LA NUBE DE PALABRAS (D3.js) ---
         const colors = d3.scale.category10();
 
+        function getAvailableBox() {
+            const inProjection = document.body.classList.contains('projection-mode');
+            if (inProjection) {
+                const rv = document.getElementById('results-view');
+                const q  = document.getElementById('results-question');
+                const rvStyles = getComputedStyle(rv);
+                const padX = parseFloat(rvStyles.paddingLeft) + parseFloat(rvStyles.paddingRight);
+                const padY = parseFloat(rvStyles.paddingTop)  + parseFloat(rvStyles.paddingBottom);
+                const width  = rv.clientWidth  - padX;
+                const height = rv.clientHeight - padY - q.offsetHeight - 8; // pequeño margen
+                return { width: Math.max(0, width), height: Math.max(0, height) };
+            } else {
+                const parent = document.getElementById('results-column');
+                const styles = getComputedStyle(parent);
+                const padX = parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight);
+                const padY = parseFloat(styles.paddingTop)  + parseFloat(styles.paddingBottom);
+                return {
+                    width:  parent.clientWidth  - padX,
+                    height: parent.clientHeight - padY
+                };
+            }
+        }
+
         function drawWordCloud() {
             if (Object.keys(wordCounts).length === 0) {
                 d3.select("#wordcloud-container svg").remove();
                 return;
-            };
+            }
 
-            const cloudContainer = document.getElementById('wordcloud-container');
-            const parent = document.getElementById('results-column');
-            const width  = parent.clientWidth - 32; // padding
-            const height = parent.clientHeight - 32;
+            const { width, height } = getAvailableBox();
 
-            const wordList = Object.entries(wordCounts).map(([word, count]) => ({ text: word, size: count, count: count }))
-                                .sort((a, b) => b.count - a.count);
+            const wordList = Object.entries(wordCounts)
+                .map(([word, count]) => ({ text: word, size: count, count }))
+                .sort((a, b) => b.count - a.count);
 
-            const counts = wordList.map(d => d.count);
+            const counts   = wordList.map(d => d.count);
             const minCount = d3.min(counts) || 1;
             const maxCount = d3.max(counts) || 1;
-            
+
             const numWords = wordList.length;
-            const maxFontSize = Math.min(width / 5, Math.max(40, 220 - numWords * 4));
-            const minFontSize = Math.max(15, maxFontSize / 5);
+
+            const base = Math.min(width, height);
+            const maxFontSize = Math.max(48, Math.min(base / 2.2, 280));
+            const minFontSize = Math.max(18, maxFontSize / 6);
 
             let fontScale;
-             if (minCount === maxCount) {
+            if (minCount === maxCount) {
                 fontScale = d3.scale.linear().domain([0, maxCount]).range([minFontSize, maxFontSize]);
             } else {
                 fontScale = d3.scale.log().domain([minCount, maxCount]).range([minFontSize, maxFontSize]);
             }
-            
+
             const layout = d3.layout.cloud()
                 .size([width, height])
-                .words(wordList.map(d => ({...d, size: fontScale(d.size)})))
-                .padding(5)
-                .rotate(() => {
-                    if (currentLayout === 'horizontal') return 0;
-                    return (~~(Math.random() * 2) * 90);
-                })
+                .words(wordList.map(d => ({ ...d, size: fontScale(d.size) })))
+                .padding(2)
+                .rotate(() => currentLayout === 'horizontal' ? 0 : (~~(Math.random() * 2) * 90))
                 .fontSize(d => d.size)
                 .on("end", draw);
+
             layout.start();
 
             function draw(words) {
@@ -435,23 +461,27 @@
                 const tooltip = d3.select("#tooltip");
 
                 const svg = d3.select("#wordcloud-container").append("svg")
-                    .attr("width", '100%').attr("height", '100%')
+                    .attr("width",  width)
+                    .attr("height", height)
                     .attr("viewBox", `0 0 ${width} ${height}`)
-                    .append("g").attr("transform", `translate(${width / 2},${height / 2})`);
-                
+                    .attr("preserveAspectRatio", "xMidYMid meet")
+                    .append("g")
+                    .attr("transform", `translate(${width / 2},${height / 2})`);
+
                 svg.selectAll("text").data(words).enter().append("text")
-                    .attr("class", "word").style("font-size", d => `${d.size}px`)
-                    .style("fill", (d, i) => colors(i)).attr("text-anchor", "middle")
-                    .attr("transform", d => `translate(${[d.x, d.y]})rotate(${d.rotate})`).text(d => d.text)
+                    .attr("class", "word")
+                    .style("font-size", d => `${d.size}px`)
+                    .style("fill", (d, i) => colors(i))
+                    .attr("text-anchor", "middle")
+                    .attr("transform", d => `translate(${[d.x, d.y]})rotate(${d.rotate})`)
+                    .text(d => d.text)
                     .on("mouseover", function(d) {
                         tooltip.style("opacity", .9);
                         tooltip.html(`${d.text}: ${d.count}`)
                             .style("left", (d3.event.pageX + 5) + "px")
-                            .style("top", (d3.event.pageY - 28) + "px");
+                            .style("top",  (d3.event.pageY - 28) + "px");
                     })
-                    .on("mouseout", function(d) {
-                        tooltip.style("opacity", 0);
-                    });
+                    .on("mouseout", function() { tooltip.style("opacity", 0); });
             }
         }
         
