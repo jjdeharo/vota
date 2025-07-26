@@ -89,8 +89,10 @@
                             <div id="qrcode-container" class="mt-2"></div>
                         </div>
                         <div class="text-center">
-                            <p class="text-sm">O introduciendo el código</p>
-                            <span id="session-code" class="text-2xl font-bold bg-white px-3 py-2 mt-2 inline-block rounded-md shadow-sm cursor-pointer" onclick="copyCode()"></span>
+                            <p class="text-sm">O yendo a:</p>
+                            <p id="app-url" class="font-mono bg-gray-200 px-2 py-1 rounded text-sm my-1"></p>
+                            <p class="text-sm">e introduciendo el código:</p>
+                            <span id="session-code" class="text-2xl font-bold bg-white px-3 py-2 mt-1 inline-block rounded-md shadow-sm cursor-pointer" onclick="copyCode()"></span>
                         </div>
                     </div>
                 </div>
@@ -211,8 +213,8 @@
             container.innerHTML = ''; // Limpia el QR anterior si existe
             new QRCode(container, {
                 text: url,
-                width: 200,  // <-- CÓDIGO QR MÁS GRANDE
-                height: 200, // <-- CÓDIGO QR MÁS GRANDE
+                width: 200,
+                height: 200,
                 colorDark : "#000000",
                 colorLight : "#ffffff",
                 correctLevel : QRCode.CorrectLevel.H
@@ -239,16 +241,19 @@
 
             sessionData = { question, options };
             
-            // Genera un ID de sesión corto y aleatorio
             const sessionId = Math.random().toString(36).substring(2, 8).toUpperCase();
             peer = new Peer(sessionId); 
 
             peer.on('open', (id) => {
                 myPeerId = id;
-                const sessionUrl = window.location.href.split('?')[0] + '?session=' + id;
+                const baseUrl = window.location.href.split('?')[0];
+                const sessionUrl = baseUrl + '?session=' + id;
                 
                 generateQRCode(sessionUrl);
                 document.getElementById('session-code').innerText = id;
+                // **NUEVO: Mostrar la URL base de la aplicación**
+                document.getElementById('app-url').innerText = baseUrl;
+
                 document.getElementById('create-session-form').classList.add('hidden');
                 document.getElementById('results-view').classList.remove('hidden');
                 updateResultsView(sessionData);
@@ -325,9 +330,16 @@
 
                 hostConnection.on('data', (data) => {
                     if (data.type === 'session-data') {
-                        document.getElementById('join-session-form').classList.add('hidden');
-                        document.getElementById('voting-view').classList.remove('hidden');
-                        updateVotingView(data.payload);
+                        const hasVoted = localStorage.getItem('voted_in_' + hostConnection.peer);
+                        if (hasVoted) {
+                            document.getElementById('join-session-form').classList.add('hidden');
+                            document.getElementById('voting-view').classList.add('hidden');
+                            document.getElementById('voted-view').classList.remove('hidden');
+                        } else {
+                            document.getElementById('join-session-form').classList.add('hidden');
+                            document.getElementById('voting-view').classList.remove('hidden');
+                            updateVotingView(data.payload);
+                        }
                     }
                 });
                  hostConnection.on('error', (err) => {
@@ -367,6 +379,9 @@
 
         function castVote(optionIndex) {
             if (hostConnection) {
+                const hostId = hostConnection.peer;
+                localStorage.setItem('voted_in_' + hostId, 'true');
+                
                 hostConnection.send({ type: 'vote', payload: { optionIndex } });
                 document.getElementById('voting-view').classList.add('hidden');
                 document.getElementById('voted-view').classList.remove('hidden');
