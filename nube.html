@@ -166,10 +166,12 @@
             padding: 1rem !important;
             height: 100%;
             min-height: 480px;
+        }
+        #results-view:not(.hidden) {
             display: flex;
             flex-direction: column;
         }
-        #results-view > .grid {
+        #results-view:not(.hidden) > .grid {
             flex: 1 1 auto;
             min-height: 0;
             align-items: stretch;
@@ -553,8 +555,18 @@
 
         // --- LÓGICA GENERAL DE LA UI ---
         function switchView(view) {
-            document.getElementById('presenter-view').classList.toggle('hidden', view !== 'presenter');
-            document.getElementById('participant-view').classList.toggle('hidden', view !== 'participant');
+            const presenterView = document.getElementById('presenter-view');
+            const participantView = document.getElementById('participant-view');
+            
+            if (view === 'presenter') {
+                presenterView.classList.remove('hidden');
+                participantView.classList.add('hidden');
+                document.getElementById('create-session-form').classList.remove('hidden');
+                document.getElementById('results-view').classList.add('hidden');
+            } else {
+                presenterView.classList.add('hidden');
+                participantView.classList.remove('hidden');
+            }
             const appEl = document.getElementById('app');
             appEl.classList.toggle('max-w-5xl', view === 'presenter');
             appEl.classList.toggle('max-w-2xl', view === 'participant');
@@ -670,7 +682,6 @@
                 document.getElementById('direct-session-link').innerText = sessionUrl;
                 document.getElementById('app-url').innerText = baseUrl.replace(/^https?:\/\//, '');
 
-                document.getElementById('lang-selector-container').classList.add('hidden');
                 document.getElementById('create-session-form').classList.add('hidden');
                 document.getElementById('results-view').classList.remove('hidden');
                 document.getElementById('results-question').innerText = sessionData.question;
@@ -867,6 +878,7 @@
         }
 
         window.onload = () => {
+            document.getElementById('results-view').classList.add('hidden');
             updateFooterSpace();
             const savedLang = localStorage.getItem('preferred_language');
             const browserLang = (navigator.language || navigator.userLanguage).split('-')[0];
