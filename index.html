@@ -6,8 +6,10 @@
     <title>Votación en Tiempo Real con WebRTC</title>
     <!-- Tailwind CSS para un diseño rápido y moderno -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- PeerJS para la conexión WebRTC (ENLACE CORREGIDO) -->
+    <!-- PeerJS para la conexión WebRTC -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.4.7/peerjs.min.js"></script>
+    <!-- Librería para generar Códigos QR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <!-- Google Fonts para una mejor tipografía -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,7 +21,6 @@
         .bar-transition {
             transition: width 0.5s ease-in-out;
         }
-        /* Añadimos un pequeño spinner para indicar la conexión */
         .loader {
             border: 4px solid #f3f3f3;
             border-top: 4px solid #3498db;
@@ -31,6 +32,13 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+        /* Estilo para el contenedor del QR para que el código se vea nítido */
+        #qrcode-container {
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
     </style>
 </head>
@@ -70,10 +78,17 @@
             
             <div id="results-view" class="hidden">
                  <div class="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 rounded-md mb-6">
-                    <p class="font-bold">¡Sesión en vivo!</p>
-                    <p>Comparte este código con tus alumnos: 
-                        <span id="session-code" class="text-2xl font-bold bg-white px-2 py-1 rounded-md shadow-sm cursor-pointer" onclick="copyCode()"></span>
-                    </p>
+                    <p class="font-bold text-center">¡Sesión en vivo! Comparte con tus alumnos:</p>
+                    <div class="flex flex-col md:flex-row items-center justify-center gap-6 mt-4">
+                        <div class="text-center">
+                            <p class="text-sm">Escaneando el QR</p>
+                            <div id="qrcode-container" class="mt-2 inline-block"></div>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-sm">O introduciendo el código</p>
+                            <span id="session-code" class="text-2xl font-bold bg-white px-3 py-2 mt-2 inline-block rounded-md shadow-sm cursor-pointer" onclick="copyCode()"></span>
+                        </div>
+                    </div>
                 </div>
                 <h2 id="results-question" class="text-2xl font-bold mb-4"></h2>
                 <div id="results-container" class="space-y-4"></div>
@@ -116,6 +131,25 @@
     </div>
 
     <script>
+        // --- LÓGICA DE INICIO ---
+        window.onload = function() {
+            checkURLParameters();
+        };
+
+        function checkURLParameters() {
+            const params = new URLSearchParams(window.location.search);
+            const sessionId = params.get('session');
+
+            if (sessionId) {
+                // Si hay un ID de sesión en la URL, es un alumno.
+                document.getElementById('view-selector').style.display = 'none'; // Ocultar selector de vista
+                switchView('student');
+                document.getElementById('code-input').value = sessionId;
+                joinSession();
+            }
+        }
+
+
         // --- Variables Globales ---
         let peer = null;
         let hostConnection = null; // Para el alumno: la conexión con el anfitrión
@@ -168,6 +202,19 @@
             });
         }
 
+        function generateQRCode(url) {
+            const container = document.getElementById('qrcode-container');
+            container.innerHTML = ''; // Limpia el QR anterior si existe
+            new QRCode(container, {
+                text: url,
+                width: 128,
+                height: 128,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
+
         // --- LÓGICA DEL PRESENTADOR (ANFITRIÓN) ---
         
         function hostSession() {
@@ -188,11 +235,13 @@
 
             sessionData = { question, options };
             
-            // Usamos el servidor público de PeerJS. No se necesita API Key.
             peer = new Peer(); 
 
             peer.on('open', (id) => {
                 myPeerId = id;
+                const sessionUrl = window.location.href.split('?')[0] + '?session=' + id;
+                
+                generateQRCode(sessionUrl);
                 document.getElementById('session-code').innerText = id;
                 document.getElementById('create-session-form').classList.add('hidden');
                 document.getElementById('results-view').classList.remove('hidden');
@@ -202,7 +251,6 @@
             peer.on('connection', (conn) => {
                 guestConnections.push(conn);
                 conn.on('open', () => {
-                    // Enviar la pregunta y opciones al nuevo alumno conectado
                     conn.send({ type: 'session-data', payload: sessionData });
                 });
                 conn.on('data', (data) => {
@@ -223,10 +271,6 @@
         function handleVote(optionIndex) {
             sessionData.options[optionIndex].votes++;
             updateResultsView(sessionData);
-            // Reenviar el estado actualizado a todos los alumnos (opcional, por si quieres mostrar resultados en vivo a todos)
-            // guestConnections.forEach(conn => {
-            //     conn.send({ type: 'session-data', payload: sessionData });
-            // });
         }
 
         function updateResultsView(data) {
@@ -259,6 +303,7 @@
             const hostId = document.getElementById('code-input').value.trim();
             if (!hostId) return;
 
+            document.getElementById('join-button').setAttribute('disabled', true);
             document.getElementById('join-button-text').classList.add('hidden');
             document.getElementById('join-loader').classList.remove('hidden');
             document.getElementById('join-error').classList.add('hidden');
@@ -266,7 +311,7 @@
             peer = new Peer();
 
             peer.on('open', () => {
-                hostConnection = peer.connect(hostId);
+                hostConnection = peer.connect(hostId, { reliable: true });
                 
                 hostConnection.on('open', () => {
                     // Conexión establecida
@@ -297,6 +342,7 @@
             errorP.classList.remove('hidden');
             document.getElementById('join-button-text').classList.remove('hidden');
             document.getElementById('join-loader').classList.add('hidden');
+            document.getElementById('join-button').removeAttribute('disabled');
         }
 
         function updateVotingView(data) {
