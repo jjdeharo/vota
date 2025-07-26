@@ -118,16 +118,7 @@
             justify-content: center;
             background-color: var(--theme-color-content-bg);
         }
-        body.projection-mode #results-view {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-            background-color: transparent;
-        }
+        
         .hide-on-projection {
             transition: opacity 0.3s ease, visibility 0.3s ease;
         }
@@ -161,33 +152,6 @@
             gap: 0;
         }
         
-        /* Ajustes de altura y scroll para vista normal */
-        #results-view {
-            padding: 1rem !important;
-            height: 100%;
-            min-height: 480px;
-            margin-top: 0;
-            margin-bottom: 0;
-        }
-        #results-view:not(.hidden) {
-            display: flex;
-            flex-direction: column;
-        }
-        #results-view:not(.hidden) > .grid {
-            flex: 1 1 auto;
-            min-height: 0;
-            align-items: stretch;
-            gap: 1rem;
-        }
-        #results-column {
-            height: 100%;
-            min-height: 0;
-            overflow: hidden;
-        }
-        #sharing-info-container {
-            overflow: auto;
-            max-height: 100%;
-        }
         #participant-view{
             margin-top: auto;
             margin-bottom: auto;
@@ -198,6 +162,38 @@
         }
         @media (max-height: 640px){
             #participant-view{ margin-top: 0; margin-bottom: 0; }
+        }
+
+        /* RESULTADOS: altura por contenido, sin empujar el footer */
+        #results-view{
+          height: auto !important;
+          min-height: 0 !important;
+          margin-top: 1rem;
+          margin-bottom: 0;
+        }
+
+        /* Que la rejilla no intente crecer */
+        #results-view > .grid{
+          flex: none !important;
+          min-height: 0 !important;
+          gap: 1.5rem;
+        }
+
+        /* Un mínimo razonable para la nube */
+        #results-column{
+          min-height: 320px;
+        }
+
+        /* En modo proyector, sí llenamos toda la pantalla */
+        body.projection-mode #results-view{
+          width: 100%;
+          height: 100% !important;
+          min-height: 480px !important;
+          display: flex !important;
+        }
+        body.projection-mode #results-view > .grid{
+          flex: 1 1 auto !important;
+          gap: 0;
         }
     </style>
 </head>
@@ -698,6 +694,7 @@
                 document.getElementById('create-session-form').classList.add('hidden');
                 document.getElementById('results-view').classList.remove('hidden');
                 document.getElementById('results-question').innerText = sessionData.question;
+                document.getElementById('lang-selector-container').classList.add('hidden');
                 updateParticipantCount();
                 drawWordCloud();
             });
