@@ -71,7 +71,7 @@
 
     <div id="app" class="w-full max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8 transition-all duration-300 relative">
 
-        <!-- NUEVO: Selector de Idioma -->
+        <!-- Selector de Idioma -->
         <div id="lang-selector-container" class="absolute top-4 right-4">
             <select id="lang-selector" onchange="setLanguage(this.value)" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2">
                 <option value="es">Español</option>
@@ -114,8 +114,9 @@
             <div id="results-view" class="hidden relative">
                  <div class="info-box bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 rounded-md mb-6">
                     <p class="font-bold text-center" data-translate-key="live_session_title">¡Sesión en vivo! Comparte con la clase:</p>
-                    <div class="flex flex-col md:flex-row items-center justify-center gap-6 mt-4">
-                        <div class="text-center">
+                    <!-- **NUEVO: Contenedor flexible y responsivo** -->
+                    <div class="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 mt-4">
+                        <div class="text-center flex-shrink-0">
                             <p class="text-sm" data-translate-key="scan_qr_label">Escaneando el QR</p>
                             <div id="qrcode-container" class="mt-2"></div>
                         </div>
@@ -142,7 +143,7 @@
             </div>
         </div>
 
-        <!-- Vista del Alumno -->
+        <!-- Vista del Participante -->
         <div id="student-view" class="hidden">
             <div id="join-session-form">
                 <h2 class="text-2xl font-bold mb-4" data-translate-key="join_title">Unirse a una votación</h2>
@@ -520,7 +521,7 @@
             });
         }
 
-        // --- LÓGICA DEL ALUMNO (INVITADO) ---
+        // --- LÓGICA DEL PARTICIPANTE (INVITADO) ---
 
         function joinSession() {
             const hostId = document.getElementById('code-input').value.trim();
