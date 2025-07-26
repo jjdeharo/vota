@@ -395,6 +395,8 @@
         let hostConnection = null;
         let guestConnections = [];
         let sessionData = {};
+        let voteTimeout = null;
+        let countdownInterval = null;
 
         // --- LÓGICA GENERAL DE LA UI ---
         function switchView(view) {
@@ -653,13 +655,13 @@
             let secondsLeft = 10;
             const countdownSpan = document.getElementById('vote-countdown');
             countdownSpan.textContent = `(${secondsLeft}s)`;
-            let countdownInterval = setInterval(() => {
+            countdownInterval = setInterval(() => {
                 secondsLeft--;
                 countdownSpan.textContent = `(${secondsLeft}s)`;
                 if (secondsLeft <= 0) clearInterval(countdownInterval);
             }, 1000);
 
-            let voteTimeout = setTimeout(() => {
+            voteTimeout = setTimeout(() => {
                 clearInterval(countdownInterval);
                 document.querySelectorAll('#vote-options-container button').forEach(btn => btn.disabled = false);
                 document.getElementById('vote-sending').classList.add('hidden');
