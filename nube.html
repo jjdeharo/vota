@@ -73,6 +73,7 @@
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.2s;
+            z-index: 999;
         }
         /* Clases para aplicar el tema de color */
         .themed-bg { background-color: var(--theme-color-primary); color: var(--theme-color-text); }
@@ -385,12 +386,16 @@
             const counts = wordList.map(d => d.count);
             const minCount = d3.min(counts);
             const maxCount = d3.max(counts);
+            
+            const numWords = wordList.length;
+            const maxFontSize = Math.max(40, 200 - numWords * 3);
+            const minFontSize = Math.max(15, maxFontSize / 6);
 
             let fontScale;
             if (minCount === maxCount) {
-                fontScale = d3.scale.linear().domain([0, minCount]).range([20, 150]);
+                fontScale = d3.scale.linear().domain([0, minCount]).range([minFontSize, (minFontSize + maxFontSize) / 1.5]);
             } else {
-                fontScale = d3.scale.linear().domain([minCount, maxCount]).range([20, 150]);
+                fontScale = d3.scale.linear().domain([minCount, maxCount]).range([minFontSize, maxFontSize]);
             }
             
             const layout = d3.layout.cloud()
