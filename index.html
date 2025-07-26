@@ -58,7 +58,7 @@
             height: 100vh;
             border-radius: 0;
             padding: 2rem;
-            cursor: pointer; /* **NUEVO: Cambia el cursor para indicar que es clickeable** */
+            cursor: pointer;
         }
         body.projection-mode #view-selector,
         body.projection-mode #lang-selector-container,
@@ -116,15 +116,25 @@
                     </div>
                     <button onclick="addOption()" class="mt-2 text-sm text-green-600 hover:text-green-800" data-translate-key="add_option_btn">+ Añadir opción</button>
                 </div>
-                <button onclick="hostSession()" id="host-button" class="w-full bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-700 transition duration-300 flex items-center justify-center">
-                    <span id="host-button-text" data-translate-key="start_session_btn">Iniciar Sesión</span>
-                    <div id="host-loader" class="loader hidden ml-3"></div>
-                </button>
+                <!-- **NUEVO: Contenedor para los dos botones de acción** -->
+                <div class="flex flex-col sm:flex-row gap-4 mt-6">
+                    <button onclick="generateShareableLink()" id="prepare-button" class="w-full bg-gray-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-600 transition duration-300 flex items-center justify-center">
+                        <span data-translate-key="prepare_session_btn">Preparar sesión</span>
+                    </button>
+                    <button onclick="hostSession()" id="host-button" class="w-full bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-700 transition duration-300 flex items-center justify-center">
+                        <span id="host-button-text" data-translate-key="start_session_btn">Iniciar Sesión</span>
+                        <div id="host-loader" class="loader hidden ml-3"></div>
+                    </button>
+                </div>
+                <!-- **NUEVO: Contenedor para mostrar el enlace de preparación** -->
+                <div id="shareable-link-container" class="hidden mt-4 p-4 bg-gray-100 rounded-lg">
+                    <label class="block text-sm font-medium text-gray-700 mb-2" data-translate-key="shareable_link_title">Enlace de preparación listo. Cópialo y guárdalo para usarlo más tarde:</label>
+                    <input type="text" id="shareable-link-input" readonly class="w-full p-2 border border-gray-300 rounded-md bg-white font-mono text-sm">
+                </div>
             </div>
             
             <div id="results-view" class="hidden">
                 <div class="flex flex-col lg:flex-row lg:gap-8">
-                    <!-- Columna Izquierda: Info para compartir -->
                     <div class="info-box lg:w-2/5 xl:w-1/3 lg:flex-shrink-0 bg-green-50 border border-green-200 p-4 rounded-md mb-6 lg:mb-0 flex flex-col">
                         <p class="font-bold text-center mb-4 text-green-800" data-translate-key="live_session_title">¡Sesión en vivo! Comparte:</p>
                         <div class="flex flex-col items-center justify-center flex-grow gap-y-4">
@@ -141,7 +151,6 @@
                         </div>
                     </div>
 
-                    <!-- Columna Derecha: Resultados -->
                     <div class="results-content flex-grow flex flex-col">
                         <div class="flex justify-between items-start gap-4 mb-8">
                             <h2 id="results-question" class="text-3xl md:text-4xl font-extrabold flex-grow"></h2>
@@ -205,6 +214,7 @@
                 'option_1_placeholder': 'Opción 1',
                 'option_2_placeholder': 'Opción 2',
                 'add_option_btn': '+ Añadir opción',
+                'prepare_session_btn': 'Preparar sesión',
                 'start_session_btn': 'Iniciar Sesión',
                 'live_session_title': '¡Sesión en vivo! Comparte:',
                 'scan_qr_label': 'Escaneando el QR',
@@ -223,6 +233,7 @@
                 'alert_no_question': 'Por favor, introduce una pregunta y al menos dos opciones.',
                 'alert_connection_error': 'Ha ocurrido un error con la conexión. Por favor, recarga la página.',
                 'join_error_text': 'Error de conexión. Verifica el código o que la persona anfitriona esté conectada.',
+                'shareable_link_title': 'Enlace de preparación listo. Cópialo y guárdalo para usarlo más tarde:',
             },
             'ca': {
                 'page_title': 'Votació en Temps Real',
@@ -235,6 +246,7 @@
                 'option_1_placeholder': 'Opció 1',
                 'option_2_placeholder': 'Opció 2',
                 'add_option_btn': '+ Afegir opció',
+                'prepare_session_btn': 'Preparar sessió',
                 'start_session_btn': 'Iniciar Sessió',
                 'live_session_title': 'Sessió en viu! Comparteix:',
                 'scan_qr_label': 'Escanejant el QR',
@@ -253,6 +265,7 @@
                 'alert_no_question': 'Si us plau, introdueix una pregunta i almenys dues opcions.',
                 'alert_connection_error': 'Hi ha hagut un error amb la connexió. Si us plau, recarrega la pàgina.',
                 'join_error_text': 'Error de connexió. Verifica el codi o que la persona amfitriona estigui connectada.',
+                'shareable_link_title': 'Enllaç de preparació a punt. Copia\'l i desa\'l per a més tard:',
             },
             'gl': {
                 'page_title': 'Votación en Tempo Real',
@@ -265,6 +278,7 @@
                 'option_1_placeholder': 'Opción 1',
                 'option_2_placeholder': 'Opción 2',
                 'add_option_btn': '+ Engadir opción',
+                'prepare_session_btn': 'Preparar sesión',
                 'start_session_btn': 'Iniciar Sesión',
                 'live_session_title': 'Sesión en vivo! Comparte:',
                 'scan_qr_label': 'Escaneando o QR',
@@ -283,6 +297,7 @@
                 'alert_no_question': 'Por favor, introduce unha pregunta e polo menos dúas opcións.',
                 'alert_connection_error': 'Houbo un erro coa conexión. Por favor, recarga a páxina.',
                 'join_error_text': 'Erro de conexión. Verifica o código ou que a persoa anfitrioa estea conectada.',
+                'shareable_link_title': 'Ligazón de preparación lista. Cópiaa e gárdaa para usala máis tarde:',
             },
             'eu': {
                 'page_title': 'Bozketa Denbora Errealean',
@@ -295,6 +310,7 @@
                 'option_1_placeholder': '1. aukera',
                 'option_2_placeholder': '2. aukera',
                 'add_option_btn': '+ Gehitu aukera',
+                'prepare_session_btn': 'Saioa prestatu',
                 'start_session_btn': 'Saioa Hasi',
                 'live_session_title': 'Saioa zuzenean! Partekatu:',
                 'scan_qr_label': 'QR-a eskaneatzen',
@@ -313,6 +329,7 @@
                 'alert_no_question': 'Mesedez, sartu galdera bat eta gutxienez bi aukera.',
                 'alert_connection_error': 'Konexioarekin errore bat gertatu da. Mesedez, birkargatu orria.',
                 'join_error_text': 'Konexio-errorea. Egiaztatu kodea edo antolatzailea konektatuta dagoela.',
+                'shareable_link_title': 'Prestatzeko esteka prest. Kopiatu eta gorde geroago erabiltzeko:',
             }
         };
 
@@ -357,16 +374,40 @@
             checkURLParameters();
         };
 
+        // **Lógica de URL actualizada**
         function checkURLParameters() {
             const params = new URLSearchParams(window.location.search);
             const sessionId = params.get('session');
+            const data = params.get('data');
 
-            if (sessionId) {
+            if (sessionId) { // Prioridad para los participantes
                 document.getElementById('view-selector').style.display = 'none';
                 document.getElementById('lang-selector-container').style.display = 'none';
                 switchView('student');
                 document.getElementById('code-input').value = sessionId;
                 joinSession();
+            } else if (data) { // Si no, comprobar si es una sesión preparada
+                try {
+                    const decodedData = JSON.parse(atob(data));
+                    const questionInput = document.getElementById('question');
+                    const optionsContainer = document.getElementById('options-container');
+                    
+                    questionInput.value = decodedData.question;
+                    
+                    // Limpiar opciones de ejemplo y poner las de la URL
+                    optionsContainer.innerHTML = '';
+                    decodedData.options.forEach(optionText => {
+                        const newOptionInput = document.createElement('input');
+                        newOptionInput.type = 'text';
+                        newOptionInput.name = 'option';
+                        newOptionInput.className = 'w-full p-2 border border-gray-300 rounded-md shadow-sm';
+                        newOptionInput.value = optionText;
+                        optionsContainer.appendChild(newOptionInput);
+                    });
+
+                } catch (e) {
+                    console.error("Error al decodificar los datos de la sesión preparada:", e);
+                }
             }
         }
 
@@ -429,15 +470,14 @@
             container.innerHTML = '';
             new QRCode(container, {
                 text: url,
-                width: 240,
-                height: 240,
+                width: container.clientWidth,
+                height: container.clientWidth,
                 colorDark : "#000000",
                 colorLight : "#ffffff",
                 correctLevel : QRCode.CorrectLevel.H
             });
         }
 
-        // --- **NUEVO: Lógica mejorada para el modo proyector** ---
         function toggleProjectionMode() {
             const isEntering = !document.body.classList.contains('projection-mode');
             document.body.classList.toggle('projection-mode');
@@ -450,23 +490,19 @@
 
             if (isEntering) {
                 btnText.innerText = translations[currentLang]['projection_btn_exit_text'];
-                // Añadir listeners para salir
                 window.addEventListener('keydown', handleExitProjection);
                 document.getElementById('app').addEventListener('click', handleExitProjection);
             } else {
                 btnText.innerText = translations[currentLang]['projection_btn_text'];
-                // Quitar listeners al salir
                 window.removeEventListener('keydown', handleExitProjection);
                 document.getElementById('app').removeEventListener('click', handleExitProjection);
             }
         }
 
         function handleExitProjection(event) {
-            // Evitar que el botón de proyector se active dos veces
             if (event.type === 'click' && event.target.closest('#projection-btn')) {
                 return;
             }
-            // Si estamos en modo proyector, salir
             if (document.body.classList.contains('projection-mode')) {
                 toggleProjectionMode();
             }
@@ -474,6 +510,36 @@
 
         // --- LÓGICA DEL PRESENTADOR (ANFITRIÓN) ---
         
+        // **NUEVA FUNCIÓN para generar enlace**
+        function generateShareableLink() {
+            const question = document.getElementById('question').value.trim();
+            const optionInputs = document.querySelectorAll('#options-container input[name="option"]');
+            const options = Array.from(optionInputs)
+                .map(input => input.value.trim())
+                .filter(text => text !== '');
+
+            if (!question || options.length < 2) {
+                alert(translations[currentLang]['alert_no_question']);
+                return;
+            }
+
+            const pollData = { question, options };
+            const encodedData = btoa(JSON.stringify(pollData));
+            const shareUrl = window.location.href.split('?')[0] + '?data=' + encodedData;
+            
+            const linkContainer = document.getElementById('shareable-link-container');
+            const linkInput = document.getElementById('shareable-link-input');
+            linkInput.value = shareUrl;
+            linkContainer.classList.remove('hidden');
+            linkInput.select();
+            document.execCommand('copy');
+            
+            const toast = document.getElementById('toast');
+            toast.innerText = translations[currentLang]['copied_toast'].replace('Código', 'Enlace');
+            toast.style.opacity = 1;
+            setTimeout(() => { toast.style.opacity = 0; }, 2000);
+        }
+
         function hostSession() {
             const question = document.getElementById('question').value.trim();
             const optionInputs = document.querySelectorAll('#options-container input[name="option"]');
@@ -489,6 +555,8 @@
             
             document.getElementById('host-button-text').classList.add('hidden');
             document.getElementById('host-loader').classList.remove('hidden');
+            document.getElementById('prepare-button').setAttribute('disabled', true);
+
 
             sessionData = { question, options };
             
@@ -526,6 +594,7 @@
                 console.error(err);
                 document.getElementById('host-button-text').classList.remove('hidden');
                 document.getElementById('host-loader').classList.add('hidden');
+                document.getElementById('prepare-button').removeAttribute('disabled');
             });
         }
 
