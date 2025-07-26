@@ -56,23 +56,25 @@
         }
         body.projection-mode #view-selector,
         body.projection-mode #lang-selector-container,
-        body.projection-mode #results-view .info-box {
+        body.projection-mode .info-box,
+        body.projection-mode #projection-btn {
             display: none;
         }
-        body.projection-mode #results-view {
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+        body.projection-mode #results-view .results-content {
+             width: 100%;
+             height: 100%;
+             display: flex;
+             flex-direction: column;
+             justify-content: center;
         }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex flex-col items-center justify-center min-h-screen p-4">
 
-    <div id="app" class="w-full max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8 transition-all duration-300 relative">
+    <div id="app" class="w-full max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8 transition-all duration-300 relative">
 
         <!-- Selector de Idioma -->
-        <div id="lang-selector-container" class="absolute top-4 right-4">
+        <div id="lang-selector-container" class="absolute top-4 right-4 z-10">
             <select id="lang-selector" onchange="setLanguage(this.value)" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2">
                 <option value="es">Español</option>
                 <option value="ca">Català</option>
@@ -111,35 +113,42 @@
                 </button>
             </div>
             
-            <div id="results-view" class="hidden relative">
-                 <div class="info-box bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 rounded-md mb-6">
-                    <p class="font-bold text-center" data-translate-key="live_session_title">¡Sesión en vivo! Comparte con la clase:</p>
-                    <!-- **NUEVO: Contenedor flexible y responsivo** -->
-                    <div class="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 mt-4">
-                        <div class="text-center flex-shrink-0">
-                            <p class="text-sm" data-translate-key="scan_qr_label">Escaneando el QR</p>
-                            <div id="qrcode-container" class="mt-2"></div>
-                        </div>
-                        <div class="text-center">
-                            <p class="text-sm" data-translate-key="or_go_to_label">O yendo a:</p>
-                            <p id="app-url" class="font-mono bg-gray-200 px-2 py-1 rounded text-sm my-1"></p>
-                            <p class="text-sm" data-translate-key="and_enter_code_label">e introduciendo el código:</p>
-                            <span id="session-code" class="text-2xl font-bold bg-white px-3 py-2 mt-1 inline-block rounded-md shadow-sm cursor-pointer" onclick="copyCode()"></span>
+            <div id="results-view" class="hidden">
+                 <!-- **NUEVO: Contenedor principal de dos columnas** -->
+                <div class="flex flex-col lg:flex-row lg:gap-8">
+                    <!-- Columna Izquierda: Info para compartir -->
+                    <div class="info-box lg:w-1/3 lg:flex-shrink-0 bg-blue-50 border border-blue-200 p-4 rounded-md mb-6 lg:mb-0">
+                        <p class="font-bold text-center mb-4" data-translate-key="live_session_title">¡Sesión en vivo! Comparte:</p>
+                        <div class="flex flex-col items-center gap-y-4">
+                            <div class="text-center">
+                                <p class="text-sm" data-translate-key="scan_qr_label">Escaneando el QR</p>
+                                <div id="qrcode-container" class="mt-2"></div>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-sm" data-translate-key="or_go_to_label">O yendo a:</p>
+                                <p id="app-url" class="font-mono bg-gray-200 px-2 py-1 rounded text-sm my-1 break-all"></p>
+                                <p class="text-sm mt-2" data-translate-key="and_enter_code_label">e introduciendo el código:</p>
+                                <span id="session-code" class="text-2xl font-bold bg-white px-3 py-2 mt-1 inline-block rounded-md shadow-sm cursor-pointer" onclick="copyCode()"></span>
+                            </div>
                         </div>
                     </div>
+
+                    <!-- Columna Derecha: Resultados -->
+                    <div class="results-content flex-grow relative">
+                         <div class="absolute -top-2 right-0">
+                            <button id="projection-btn" onclick="toggleProjectionMode()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg inline-flex items-center text-sm transition-opacity duration-300">
+                                <svg id="projection-icon-enter" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"></path></svg>
+                                <svg id="projection-icon-exit" class="w-4 h-4 mr-2 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 4H3v7M10 4l-7 7m18-4h-7v7M14 4l7 7m-18 6h7v-7M4 20l7-7m10 0h-7v7M20 20l-7-7"></path></svg>
+                                <span data-translate-key="projection_btn_text">Proyectar</span>
+                            </button>
+                        </div>
+                        <h2 id="results-question" class="text-3xl md:text-4xl font-extrabold mb-8 text-center"></h2>
+                        <div id="results-container" class="space-y-6 w-full"></div>
+                        <p class="text-center text-2xl md:text-3xl font-bold mt-10">
+                            <span data-translate-key="total_votes_label">Votos totales</span>: <span id="total-votes">0</span>
+                        </p>
+                    </div>
                 </div>
-                <div class="absolute top-0 right-0">
-                    <button id="projection-btn" onclick="toggleProjectionMode()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg inline-flex items-center text-sm transition-opacity duration-300">
-                        <svg id="projection-icon-enter" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"></path></svg>
-                        <svg id="projection-icon-exit" class="w-4 h-4 mr-2 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 4H3v7M10 4l-7 7m18-4h-7v7M14 4l7 7m-18 6h7v-7M4 20l7-7m10 0h-7v7M20 20l-7-7"></path></svg>
-                        <span data-translate-key="projection_btn_text">Proyectar</span>
-                    </button>
-                </div>
-                <h2 id="results-question" class="text-3xl md:text-5xl font-extrabold mb-8 text-center"></h2>
-                <div id="results-container" class="space-y-6 w-full"></div>
-                <p class="text-center text-2xl md:text-4xl font-bold mt-12">
-                    <span data-translate-key="total_votes_label">Votos totales</span>: <span id="total-votes">0</span>
-                </p>
             </div>
         </div>
 
@@ -189,7 +198,7 @@
                 'option_2_placeholder': 'Opción 2',
                 'add_option_btn': '+ Añadir opción',
                 'start_session_btn': 'Iniciar Sesión',
-                'live_session_title': '¡Sesión en vivo! Comparte con la clase:',
+                'live_session_title': '¡Sesión en vivo! Comparte:',
                 'scan_qr_label': 'Escaneando el QR',
                 'or_go_to_label': 'O yendo a:',
                 'and_enter_code_label': 'e introduciendo el código:',
@@ -219,7 +228,7 @@
                 'option_2_placeholder': 'Opció 2',
                 'add_option_btn': '+ Afegir opció',
                 'start_session_btn': 'Iniciar Sessió',
-                'live_session_title': 'Sessió en viu! Comparteix amb la classe:',
+                'live_session_title': 'Sessió en viu! Comparteix:',
                 'scan_qr_label': 'Escanejant el QR',
                 'or_go_to_label': 'O anant a:',
                 'and_enter_code_label': 'i introduint el codi:',
@@ -249,7 +258,7 @@
                 'option_2_placeholder': 'Opción 2',
                 'add_option_btn': '+ Engadir opción',
                 'start_session_btn': 'Iniciar Sesión',
-                'live_session_title': 'Sesión en vivo! Comparte coa clase:',
+                'live_session_title': 'Sesión en vivo! Comparte:',
                 'scan_qr_label': 'Escaneando o QR',
                 'or_go_to_label': 'Ou indo a:',
                 'and_enter_code_label': 'e introducindo o código:',
@@ -279,7 +288,7 @@
                 'option_2_placeholder': '2. aukera',
                 'add_option_btn': '+ Gehitu aukera',
                 'start_session_btn': 'Saioa Hasi',
-                'live_session_title': 'Saioa zuzenean! Partekatu ikasgelarekin:',
+                'live_session_title': 'Saioa zuzenean! Partekatu:',
                 'scan_qr_label': 'QR-a eskaneatzen',
                 'or_go_to_label': 'Edo hona joanda:',
                 'and_enter_code_label': 'eta kodea sartuz:',
@@ -412,8 +421,8 @@
             container.innerHTML = '';
             new QRCode(container, {
                 text: url,
-                width: 200,
-                height: 200,
+                width: 160,
+                height: 160,
                 colorDark : "#000000",
                 colorLight : "#ffffff",
                 correctLevel : QRCode.CorrectLevel.H
@@ -510,11 +519,11 @@
                 const resultElement = document.createElement('div');
                 resultElement.innerHTML = `
                     <div class="flex justify-between items-baseline mb-2">
-                        <span class="text-xl md:text-3xl text-gray-800 font-medium">${option.text}</span>
-                        <span class="text-xl md:text-3xl font-bold text-gray-900">${option.votes} <span class="text-lg md:text-2xl text-gray-600 font-medium">(${percentage.toFixed(0)}%)</span></span>
+                        <span class="text-xl md:text-2xl text-gray-800 font-medium">${option.text}</span>
+                        <span class="text-xl md:text-2xl font-bold text-gray-900">${option.votes} <span class="text-lg md:text-xl text-gray-600 font-medium">(${percentage.toFixed(0)}%)</span></span>
                     </div>
-                    <div class="w-full bg-gray-200 rounded-full h-8 md:h-12">
-                        <div class="bg-blue-500 h-8 md:h-12 rounded-full bar-transition" style="width: ${percentage}%"></div>
+                    <div class="w-full bg-gray-200 rounded-full h-8 md:h-10">
+                        <div class="bg-blue-500 h-8 md:h-10 rounded-full bar-transition" style="width: ${percentage}%"></div>
                     </div>
                 `;
                 resultsContainer.appendChild(resultElement);
