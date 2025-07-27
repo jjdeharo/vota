@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Ideas en Tiempo Real</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.4.7/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --theme-color-primary: #4f46e5; /* Indigo por defecto */
+            --theme-color-text: #ffffff;
+            --theme-color-content-bg: #f0f5ff;
+            --theme-color-primary-border: #a5b4fc;
+            --theme-color-primary-dark-text: #3730a3;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--theme-color-primary);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #qrcode-container { background: white; border-radius: 8px; padding: 1rem; display: inline-flex; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        
+        /* Estilos para la lista de ideas */
+        #ideas-list-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-content: flex-start;
+            overflow-y: auto;
+            height: 100%;
+        }
+        .idea-card {
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+            position: relative;
+            transition: all 0.3s ease;
+            flex-grow: 1;
+            border: 1px solid #e5e7eb;
+        }
+        .idea-card.has-votes {
+            border-left: 5px solid var(--theme-color-primary);
+        }
+        .vote-count {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--theme-color-primary-dark-text);
+        }
+
+        /* Themed styles */
+        .themed-bg { background-color: var(--theme-color-primary); color: var(--theme-color-text); }
+        .themed-bg-hover:hover { filter: brightness(90%); transition: filter 0.2s; }
+        .themed-content-bg { background-color: var(--theme-color-content-bg); }
+
+        /* Projection Mode */
+        body.projection-mode { overflow: hidden; }
+        body.projection-mode #app { max-width: 100%; width: 100%; height: 100vh; border-radius: 0; padding: 1rem; margin: 0 !important; }
+        body.projection-mode .hide-on-projection { display: none !important; }
+        body.projection-mode #results-column { height: 100%; }
+        body.projection-mode #results-view { height: 100%; display: flex; flex-direction: column; }
+        body.projection-mode #results-question { text-align: center; }
+        body.projection-mode #ideas-list-container { flex-grow: 1; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 flex flex-col items-center justify-start min-h-screen p-4 gap-6">
+
+    <div id="app" class="w-full max-w-5xl mx-auto transition-all duration-300 relative my-auto">
+        <div id="lang-selector-container" class="absolute top-4 right-4 z-10 hide-on-projection">
+            <select id="lang-selector" onchange="setLanguage(this.value)" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2">
+                <option value="es">Español</option>
+                <option value="ca">Català</option>
+                <option value="en">English</option>
+            </select>
+        </div>
+
+        <div id="presenter-view" class="hidden h-full">
+            <div id="create-session-form" class="themed-content-bg p-6 md:p-8 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold mb-6">Crear una nueva lista de ideas</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div class="md:col-span-2">
+                        <label for="question" class="block text-sm font-medium text-gray-700 mb-1">Título o pregunta:</label>
+                        <input type="text" id="question" class="w-full p-2 border border-gray-300 rounded-md shadow-sm" placeholder="Ej: Ideas para mejorar el patio">
+                    </div>
+                     <div>
+                        <label for="color-picker" class="block text-sm font-medium text-gray-700 mb-1">Color del tema:</label>
+                        <input type="color" id="color-picker" value="#4f46e5" class="w-12 h-12 p-1 border border-gray-300 rounded-md cursor-pointer">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="ideas-per-person" class="block text-sm font-medium text-gray-700 mb-1">Ideas por persona:</label>
+                        <input type="number" id="ideas-per-person" value="3" min="1" class="w-full p-2 border border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <div>
+                        <label for="votes-per-person" class="block text-sm font-medium text-gray-700 mb-1">Votos por persona:</label>
+                        <input type="number" id="votes-per-person" value="1" min="1" class="w-full p-2 border border-gray-300 rounded-md shadow-sm">
+                    </div>
+                </div>
+                <button onclick="hostSession()" id="host-button" class="mt-4 w-full themed-bg themed-bg-hover font-bold py-3 px-4 rounded-lg flex items-center justify-center">
+                    <span>Iniciar Sesión</span>
+                    <div id="host-loader" class="loader hidden ml-3"></div>
+                </button>
+            </div>
+
+            <div id="results-view" class="hidden themed-content-bg p-6 md:p-8 rounded-xl shadow-lg h-full">
+                <div class="flex justify-between items-start gap-4 mb-4">
+                    <h2 id="results-question" class="text-4xl font-extrabold flex-grow text-gray-800"></h2>
+                    <div class="flex gap-2 flex-shrink-0 hide-on-projection">
+                         <button id="start-voting-btn" onclick="startVotingPhase()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg">Iniciar Votación</button>
+                         <button id="projection-btn" onclick="toggleProjectionMode()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Proyectar</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full">
+                    <div id="sharing-info-container" class="lg:col-span-1 space-y-6 hide-on-projection">
+                         <div class="bg-white/60 p-4 rounded-lg text-center backdrop-blur-sm">
+                            <h3 class="font-bold mb-2 text-gray-700">1. Escanea el QR</h3>
+                            <div id="qrcode-container" class="mx-auto max-w-[200px]"></div>
+                        </div>
+                         <div class="bg-white/60 p-4 rounded-lg text-center backdrop-blur-sm">
+                             <h3 class="font-bold mb-2 text-gray-700">2. O comparte el código</h3>
+                            <span id="session-code" class="font-mono text-2xl font-bold p-2 border-2 border-dashed rounded-lg" onclick="copyCode()"></span>
+                        </div>
+                    </div>
+                    <div id="results-column" class="lg:col-span-2 bg-white/60 rounded-lg p-4 min-h-[400px]">
+                        <div id="ideas-list-container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="participant-view" class="hidden">
+            <div id="join-session-form" class="bg-white p-8 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold mb-4">Unirse a una sesión</h2>
+                <input type="text" id="code-input" class="w-full p-2 border uppercase border-gray-300 rounded-md" placeholder="Introduce el código">
+                <button onclick="joinSession()" id="join-button" class="mt-4 w-full themed-bg themed-bg-hover font-bold py-3 px-4 rounded-lg">Unirse</button>
+            </div>
+
+            <div id="idea-form" class="hidden bg-white p-8 rounded-xl shadow-lg">
+                <h2 id="idea-form-title" class="text-2xl font-bold mb-4"></h2>
+                <p id="ideas-left" class="text-sm font-medium text-gray-500 mb-2"></p>
+                <textarea id="idea-input" class="w-full p-2 border border-gray-300 rounded-md" maxlength="200" placeholder="Escribe tu idea (máx. 200 caracteres)"></textarea>
+                <button id="send-idea-btn" onclick="sendIdea()" class="mt-2 themed-bg themed-bg-hover font-bold py-2 px-4 rounded-lg">Enviar Idea</button>
+                 <p id="participant-info" class="mt-4 text-green-600"></p>
+            </div>
+
+            <div id="voting-form" class="hidden bg-white p-8 rounded-xl shadow-lg">
+                <h2 id="voting-form-title" class="text-2xl font-bold mb-4">Vota por tus ideas favoritas</h2>
+                <p id="votes-left" class="text-sm font-medium text-gray-500 mb-4"></p>
+                <div id="ideas-to-vote-container" class="space-y-2 max-h-96 overflow-y-auto"></div>
+            </div>
+            
+            <div id="completed-view" class="hidden text-center py-8">
+                 <h2 class="text-2xl font-bold mt-4">¡Gracias por participar!</h2>
+                 <p class="text-gray-600">Puedes ver los resultados en la pantalla principal.</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // --- Config & Global Variables ---
+        let peer = null;
+        let hostConnection = null;
+        let guestConnections = [];
+        let sessionData = {
+            question: '',
+            ideasPerPerson: 3,
+            votesPerPerson: 1,
+            themeColor: '#4f46e5',
+            ideas: [], // { id, text, votes }
+            phase: 'submission' // 'submission' or 'voting'
+        };
+        let participantState = {
+            submittedIdeas: 0,
+            castVotes: 0
+        };
+
+        // --- UI Logic ---
+        function switchView(view) {
+            document.getElementById('presenter-view').classList.add('hidden');
+            document.getElementById('participant-view').classList.add('hidden');
+            if (view === 'presenter') {
+                document.getElementById('presenter-view').classList.remove('hidden');
+            } else {
+                document.getElementById('participant-view').classList.remove('hidden');
+            }
+        }
+        function applyTheme(color) {
+            const root = document.documentElement;
+            root.style.setProperty('--theme-color-primary', color);
+            // Simple contrast logic
+            const r = parseInt(color.slice(1, 3), 16);
+            const g = parseInt(color.slice(3, 5), 16);
+            const b = parseInt(color.slice(5, 7), 16);
+            const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+            const textColor = (yiq >= 128) ? '#000000' : '#ffffff';
+            root.style.setProperty('--theme-color-text', textColor);
+            root.style.setProperty('--theme-color-content-bg', color + '1A');
+            root.style.setProperty('--theme-color-primary-dark-text', `color-mix(in srgb, ${color} 70%, black)`);
+        }
+
+        // --- Presenter Logic ---
+        function hostSession() {
+            sessionData.question = document.getElementById('question').value.trim();
+            if (!sessionData.question) { alert('Por favor, introduce un título.'); return; }
+            
+            sessionData.ideasPerPerson = parseInt(document.getElementById('ideas-per-person').value, 10);
+            sessionData.votesPerPerson = parseInt(document.getElementById('votes-per-person').value, 10);
+            sessionData.themeColor = document.getElementById('color-picker').value;
+            applyTheme(sessionData.themeColor);
+
+            const sessionId = Math.random().toString(36).substring(2, 8).toUpperCase();
+            peer = new Peer(sessionId);
+
+            peer.on('open', id => {
+                document.getElementById('create-session-form').classList.add('hidden');
+                document.getElementById('results-view').classList.remove('hidden');
+                document.getElementById('session-code').innerText = id;
+                document.getElementById('results-question').innerText = sessionData.question;
+                
+                const sessionUrl = `${window.location.href.split('?')[0]}?session=${id}`;
+                new QRCode(document.getElementById('qrcode-container'), { text: sessionUrl, width: 200, height: 200 });
+                
+                updateIdeasListView();
+            });
+
+            peer.on('connection', conn => {
+                guestConnections.push(conn);
+                conn.on('open', () => conn.send({ type: 'session-data', payload: sessionData }));
+                conn.on('data', data => handleGuestData(conn, data));
+                conn.on('close', () => {
+                    guestConnections = guestConnections.filter(c => c.peer !== conn.peer);
+                });
+            });
+        }
+        
+        function handleGuestData(conn, data) {
+            if (data.type === 'new-idea') {
+                const newIdea = { id: 'idea-' + Date.now() + Math.random(), text: data.payload, votes: 0 };
+                sessionData.ideas.push(newIdea);
+                updateIdeasListView();
+                broadcastUpdate();
+            } else if (data.type === 'vote') {
+                const idea = sessionData.ideas.find(i => i.id === data.payload.ideaId);
+                if (idea) idea.votes++;
+                updateIdeasListView();
+                broadcastUpdate();
+            }
+        }
+
+        function updateIdeasListView() {
+            const container = document.getElementById('ideas-list-container');
+            container.innerHTML = '';
+            
+            const sortedIdeas = [...sessionData.ideas].sort((a, b) => b.votes - a.votes);
+
+            sortedIdeas.forEach(idea => {
+                const card = document.createElement('div');
+                card.className = 'idea-card';
+                if (idea.votes > 0) card.classList.add('has-votes');
+                
+                let content = `<p class="flex-grow">${idea.text}</p>`;
+                if (sessionData.phase === 'voting' && idea.votes > 0) {
+                   content += `<div class="vote-count">${idea.votes}</div>`;
+                }
+                card.innerHTML = content;
+                container.appendChild(card);
+            });
+        }
+
+        function startVotingPhase() {
+            sessionData.phase = 'voting';
+            document.getElementById('start-voting-btn').style.display = 'none';
+            updateIdeasListView();
+            broadcastUpdate();
+        }
+        
+        function broadcastUpdate() {
+            guestConnections.forEach(conn => conn.send({ type: 'session-data', payload: sessionData }));
+        }
+
+        // --- Participant Logic ---
+        function joinSession() {
+            const hostId = document.getElementById('code-input').value.trim().toUpperCase();
+            if (!hostId) return;
+            peer = new Peer();
+            peer.on('open', () => {
+                hostConnection = peer.connect(hostId, { reliable: true });
+                hostConnection.on('open', () => {});
+                hostConnection.on('data', data => {
+                    if (data.type === 'session-data') {
+                        sessionData = data.payload;
+                        applyTheme(sessionData.themeColor);
+                        updateParticipantView();
+                    }
+                });
+            });
+        }
+
+        function updateParticipantView() {
+            document.getElementById('join-session-form').classList.add('hidden');
+            document.getElementById('idea-form').classList.add('hidden');
+            document.getElementById('voting-form').classList.add('hidden');
+            document.getElementById('completed-view').classList.add('hidden');
+
+            if (sessionData.phase === 'submission') {
+                if (participantState.submittedIdeas < sessionData.ideasPerPerson) {
+                    document.getElementById('idea-form').classList.remove('hidden');
+                    document.getElementById('idea-form-title').innerText = sessionData.question;
+                    const ideasLeft = sessionData.ideasPerPerson - participantState.submittedIdeas;
+                    document.getElementById('ideas-left').innerText = `Te quedan ${ideasLeft} idea(s) por enviar.`;
+                    document.getElementById('participant-info').innerText = '';
+                } else {
+                    document.getElementById('idea-form').classList.remove('hidden');
+                    document.getElementById('ideas-left').innerText = `Has enviado todas tus ideas.`;
+                    document.getElementById('idea-input').style.display = 'none';
+                    document.getElementById('send-idea-btn').style.display = 'none';
+                    document.getElementById('participant-info').innerText = 'Esperando que el presentador inicie la votación...';
+                }
+            } else if (sessionData.phase === 'voting') {
+                if (participantState.castVotes < sessionData.votesPerPerson) {
+                    document.getElementById('voting-form').classList.remove('hidden');
+                    document.getElementById('voting-form-title').innerText = sessionData.question;
+                    const votesLeft = sessionData.votesPerPerson - participantState.castVotes;
+                    document.getElementById('votes-left').innerText = `Puedes votar por ${votesLeft} idea(s).`;
+                    
+                    const container = document.getElementById('ideas-to-vote-container');
+                    container.innerHTML = '';
+                    sessionData.ideas.forEach(idea => {
+                        const button = document.createElement('button');
+                        button.className = 'w-full text-left p-3 border rounded-lg hover:bg-gray-100';
+                        button.innerText = idea.text;
+                        button.onclick = () => castVote(idea.id);
+                        container.appendChild(button);
+                    });
+                } else {
+                    document.getElementById('completed-view').classList.remove('hidden');
+                }
+            }
+        }
+
+        function sendIdea() {
+            const ideaText = document.getElementById('idea-input').value.trim();
+            if (!ideaText) return;
+            hostConnection.send({ type: 'new-idea', payload: ideaText });
+            participantState.submittedIdeas++;
+            document.getElementById('idea-input').value = '';
+            document.getElementById('participant-info').innerText = '¡Idea enviada!';
+            setTimeout(updateParticipantView, 1500);
+        }
+
+        function castVote(ideaId) {
+            hostConnection.send({ type: 'vote', payload: { ideaId } });
+            participantState.castVotes++;
+            updateParticipantView();
+        }
+        
+        // --- Init & Helpers ---
+        window.onload = () => {
+            const params = new URLSearchParams(window.location.search);
+            const sessionId = params.get('session');
+            if (sessionId) {
+                switchView('participant');
+                document.getElementById('code-input').value = sessionId;
+                joinSession();
+            } else {
+                switchView('presenter');
+            }
+            document.getElementById('color-picker').addEventListener('input', (e) => applyTheme(e.target.value));
+        };
+        
+        function toggleProjectionMode() { document.body.classList.toggle('projection-mode'); }
+        function copyCode() { navigator.clipboard.writeText(document.getElementById('session-code').innerText); }
+
+    </script>
+</body>
+</html>
