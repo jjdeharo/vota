@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centro de Aplicaciones</title>
+    <title>Conexión en Directo</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,25 +11,35 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
         }
         .app-card {
             transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            border: 1px solid #e5e7eb;
         }
         .app-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
+        .app-icon {
+            width: 3rem;
+            height: 3rem;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="text-gray-800">
 
     <div class="container mx-auto px-4 py-8 md:py-16">
 
         <header class="text-center mb-12">
-            <div class="flex justify-center items-center mb-4">
-                <h1 id="main-title" class="text-4xl md:text-5xl font-extrabold text-gray-900">Centro de Aplicaciones</h1>
-            </div>
-            <p id="main-subtitle" class="text-lg text-gray-600 max-w-2xl mx-auto">Una colección de herramientas interactivas para el aula.</p>
+            <h1 id="main-title" class="text-4xl md:text-5xl font-extrabold text-gray-900">Conexión en Directo</h1>
+            <p id="main-subtitle" class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">Una colección de herramientas interactivas para el aula.</p>
             <div class="absolute top-4 right-4">
                 <select id="lang-selector" onchange="setLanguage(this.value)" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                     <option value="es">Español</option>
@@ -40,37 +50,55 @@
                 </select>
             </div>
         </header>
+        
+        <div class="max-w-3xl mx-auto bg-blue-50 border border-blue-200 text-blue-800 rounded-lg p-4 mb-12" role="alert">
+            <p class="font-bold" id="instructions-title">¿Cómo crear una actividad?</p>
+            <p id="instructions-body">Para iniciar una actividad como presentador, abre la aplicación que quieras usar y pulsa en el enlace que encontrarás en la parte inferior de la pantalla (normalmente con el texto "¿Eres el presentador?").</p>
+        </div>
 
-        <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
+
+        <main class="grid grid-cols-1 md:grid-cols-2 gap-8">
 
             <div class="app-card bg-white rounded-xl shadow-md overflow-hidden">
                 <div class="p-8">
+                    <div class="app-icon bg-green-100 text-green-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                    </div>
                     <h2 id="app-vota-title" class="text-2xl font-bold text-gray-800 mb-2">Votación simple</h2>
-                    <p id="app-vota-desc" class="text-gray-600 mb-6 h-24">Crea votaciones de opción múltiple al instante. Los participantes se unen con un código y votan desde sus dispositivos, viendo los resultados en gráficos de barras que se actualizan en tiempo real.</p>
+                    <p id="app-vota-desc" class="text-gray-600 mb-6 min-h-[145px]">Crea votaciones de opción múltiple al instante. Los participantes se unen con un código y votan desde sus dispositivos, viendo los resultados en gráficos de barras que se actualizan en tiempo real.</p>
                     <a href="vota.html" id="app-vota-btn" class="inline-block bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600 transition-colors">Abrir Votación</a>
                 </div>
             </div>
 
             <div class="app-card bg-white rounded-xl shadow-md overflow-hidden">
                 <div class="p-8">
+                    <div class="app-icon bg-indigo-100 text-indigo-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
+                    </div>
                     <h2 id="app-nube-title" class="text-2xl font-bold text-gray-800 mb-2">Nube de palabras</h2>
-                    <p id="app-nube-desc" class="text-gray-600 mb-6 h-24">Recopila ideas, conceptos o respuestas cortas de la audiencia y visualízalas como una nube de palabras dinámica. Las palabras más repetidas aparecerán más grandes.</p>
+                    <p id="app-nube-desc" class="text-gray-600 mb-6 min-h-[145px]">Recopila ideas y visualízalas como una nube dinámica donde las más repetidas destacan en tamaño. Puedes descargar la nube como una imagen PNG o los datos en una hoja de cálculo (CSV).</p>
                     <a href="nube.html" id="app-nube-btn" class="inline-block bg-indigo-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-600 transition-colors">Crear Nube</a>
                 </div>
             </div>
 
             <div class="app-card bg-white rounded-xl shadow-md overflow-hidden">
                 <div class="p-8">
+                    <div class="app-icon bg-purple-100 text-purple-600">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+                    </div>
                     <h2 id="app-ideas-title" class="text-2xl font-bold text-gray-800 mb-2">Lluvia de ideas y votos</h2>
-                    <p id="app-ideas-desc" class="text-gray-600 mb-6 h-24">Una herramienta en dos fases: primero, los participantes proponen ideas de forma anónima. Después, todos votan las propuestas que prefieren para priorizar las más populares.</p>
+                    <p id="app-ideas-desc" class="text-gray-600 mb-6 min-h-[145px]">Una herramienta en dos fases: primero, los participantes proponen ideas de forma anónima. Después, todos votan las propuestas que prefieren para priorizar las más populares.</p>
                     <a href="ideas.html" id="app-ideas-btn" class="inline-block bg-purple-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-600 transition-colors">Iniciar Lluvia de Ideas</a>
                 </div>
             </div>
 
             <div class="app-card bg-white rounded-xl shadow-md overflow-hidden">
                 <div class="p-8">
+                    <div class="app-icon bg-cyan-100 text-cyan-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    </div>
                     <h2 id="app-muro-title" class="text-2xl font-bold text-gray-800 mb-2">Muro interactivo</h2>
-                    <p id="app-muro-desc" class="text-gray-600 mb-6 h-24">Permite a los participantes enviar "post-its" virtuales con un título y contenido. El presentador puede mover y organizar las tarjetas en un lienzo compartido en tiempo real.</p>
+                    <p id="app-muro-desc" class="text-gray-600 mb-6 min-h-[145px]">Permite a los participantes enviar "post-its" virtuales. El contenido no es persistente y se pierde al cerrar, pero puedes exportar el muro a PDF o los datos a una hoja de cálculo (CSV).</p>
                     <a href="muro.html" id="app-muro-btn" class="inline-block bg-cyan-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-cyan-600 transition-colors">Abrir Muro</a>
                 </div>
             </div>
@@ -86,83 +114,93 @@
     <script>
         const translations = {
             'es': {
-                'main-title': 'Centro de Aplicaciones',
+                'main-title': 'Conexión en Directo',
                 'main-subtitle': 'Una colección de herramientas interactivas para el aula.',
+                'instructions-title': '¿Cómo crear una actividad?',
+                'instructions-body': "Para iniciar una actividad como presentador, abre la aplicación que quieras usar y pulsa en el enlace que encontrarás en la parte inferior de la pantalla (normalmente con el texto \"¿Eres el presentador?\").",
                 'app-vota-title': 'Votación simple',
                 'app-vota-desc': 'Crea votaciones de opción múltiple al instante. Los participantes se unen con un código y votan desde sus dispositivos, viendo los resultados en gráficos de barras que se actualizan en tiempo real.',
                 'app-vota-btn': 'Abrir Votación',
                 'app-nube-title': 'Nube de palabras',
-                'app-nube-desc': 'Recopila ideas, conceptos o respuestas cortas de la audiencia y visualízalas como una nube de palabras dinámica. Las palabras más repetidas aparecerán más grandes.',
+                'app-nube-desc': 'Recopila ideas y visualízalas como una nube dinámica donde las más repetidas destacan en tamaño. Puedes descargar la nube como una imagen PNG o los datos en una hoja de cálculo (CSV).',
                 'app-nube-btn': 'Crear Nube',
                 'app-ideas-title': 'Lluvia de ideas y votos',
                 'app-ideas-desc': 'Una herramienta en dos fases: primero, los participantes proponen ideas de forma anónima. Después, todos votan las propuestas que prefieren para priorizar las más populares.',
                 'app-ideas-btn': 'Iniciar Lluvia de Ideas',
                 'app-muro-title': 'Muro interactivo',
-                'app-muro-desc': 'Permite a los participantes enviar "post-its" virtuales con un título y contenido. El presentador puede mover y organizar las tarjetas en un lienzo compartido en tiempo real.',
+                'app-muro-desc': 'Permite a los participantes enviar "post-its" virtuales. El contenido no es persistente y se pierde al cerrar, pero puedes exportar el muro a PDF o los datos a una hoja de cálculo (CSV).',
                 'app-muro-btn': 'Abrir Muro'
             },
             'ca': {
-                'main-title': 'Centre d\'Aplicacions',
+                'main-title': 'Connexió en Directe',
                 'main-subtitle': 'Una col·lecció d\'eines interactives per a l\'aula.',
+                 'instructions-title': 'Com crear una activitat?',
+                'instructions-body': "Per iniciar una activitat com a presentador, obre l'aplicació que vulguis fer servir i prem a l'enllaç que trobaràs a la part inferior de la pantalla (normalment amb el text \"Ets el presentador?\").",
                 'app-vota-title': 'Votació simple',
                 'app-vota-desc': 'Crea votacions d\'opció múltiple a l\'instant. Els participants s\'uneixen amb un codi i voten des dels seus dispositius, veient els resultats en gràfics de barres que s\'actualitzen en temps real.',
                 'app-vota-btn': 'Obrir Votació',
                 'app-nube-title': 'Núvol de paraules',
-                'app-nube-desc': 'Recull idees, conceptes o respostes curtes de l\'audiència i visualitza-les com un núvol de paraules dinàmic. Les paraules més repetides apareixeran més grans.',
+                'app-nube-desc': 'Recull idees i visualitza-les com un núvol dinàmic on les més repetides destaquen en mida. Pots descarregar el núvol com una imatge PNG o les dades en un full de càlcul (CSV).',
                 'app-nube-btn': 'Crear Núvol',
                 'app-ideas-title': 'Pluja d\'idees i vots',
                 'app-ideas-desc': 'Una eina en dues fases: primer, els participants proposen idees de forma anònima. Després, tothom vota les propostes que prefereixen per prioritzar les més populars.',
                 'app-ideas-btn': 'Iniciar Pluja d\'Idees',
                 'app-muro-title': 'Mur interactiu',
-                'app-muro-desc': 'Permet als participants enviar "post-its" virtuals amb un títol i contingut. El presentador pot moure i organitzar les targetes en un llenç compartit en temps real.',
+                'app-muro-desc': 'Permet als participants enviar "post-its" virtuals. El contingut no és persistent i es perd en tancar, però pots exportar el mur a PDF o les dades a un full de càlcul (CSV).',
                 'app-muro-btn': 'Obrir Mur'
             },
             'gl': {
-                'main-title': 'Centro de Aplicacións',
+                'main-title': 'Conexión en Directo',
                 'main-subtitle': 'Unha colección de ferramentas interactivas para a aula.',
+                'instructions-title': 'Como crear unha actividade?',
+                'instructions-body': "Para iniciar unha actividade como presentador, abre a aplicación que queiras usar e preme no enlace que atoparás na parte inferior da pantalla (normalmente co texto \"Es o presentador?\").",
                 'app-vota-title': 'Votación sinxela',
                 'app-vota-desc': 'Crea votacións de opción múltiple ao instante. Os participantes únense cun código e votan desde os seus dispositivos, vendo os resultados en gráficos de barras que se actualizan en tempo real.',
                 'app-vota-btn': 'Abrir Votación',
                 'app-nube-title': 'Nube de palabras',
-                'app-nube-desc': 'Recolle ideas, conceptos ou respostas curtas da audiencia e visualízaas como unha nube de palabras dinámica. As palabras máis repetidas aparecerán máis grandes.',
+                'app-nube-desc': 'Recolle ideas e visualízaas como unha nube dinámica onde as máis repetidas destacan en tamaño. Podes descargar a nube como unha imaxe PNG ou os datos nunha folla de cálculo (CSV).',
                 'app-nube-btn': 'Crear Nube',
                 'app-ideas-title': 'Chuvia de ideas e votos',
                 'app-ideas-desc': 'Unha ferramenta en dúas fases: primeiro, os participantes propoñen ideas de forma anónima. Despois, todos votan as propostas que prefiren para priorizar as máis populares.',
                 'app-ideas-btn': 'Iniciar Chuvia de Ideas',
                 'app-muro-title': 'Muro interactivo',
-                'app-muro-desc': 'Permite aos participantes enviar "post-its" virtuais cun título e contido. O presentador pode mover e organizar as tarxetas nun lenzo compartido en tempo real.',
+                'app-muro-desc': 'Permite aos participantes enviar "post-its" virtuais. O contido non é persistente e pérdese ao pechar, pero podes exportar o muro a PDF ou os datos a unha folla de cálculo (CSV).',
                 'app-muro-btn': 'Abrir Muro'
             },
             'eu': {
-                'main-title': 'Aplikazio Zentroa',
+                'main-title': 'Zuzeneko Konexioa',
                 'main-subtitle': 'Ikasgelarako tresna interaktiboen bilduma.',
+                'instructions-title': 'Nola sortu jarduera bat?',
+                'instructions-body': "Jarduera bat aurkezle gisa hasteko, ireki erabili nahi duzun aplikazioa eta sakatu pantailaren behealdean aurkituko duzun estekan (normalean \"Aurkezlea zara?\" testuarekin).",
                 'app-vota-title': 'Bozketa sinplea',
                 'app-vota-desc': 'Sortu aukera anitzeko bozkak berehala. Parte-hartzaileak kode batekin batzen dira eta beren gailuetatik bozkatzen dute, emaitzak denbora errealean eguneratzen diren barra-diagrametan ikusiz.',
                 'app-vota-btn': 'Bozketa Ireki',
                 'app-nube-title': 'Hitz-hodeia',
-                'app-nube-desc': 'Jaso ikusleen ideiak, kontzeptuak edo erantzun laburrak eta bistaratu hitz-hodei dinamiko gisa. Gehien errepikatzen diren hitzak handiago agertuko dira.',
+                'app-nube-desc': 'Bildu ideiak eta bistaratu hodei dinamiko gisa, non errepikatuenak tamainan nabarmentzen diren. Hodeia PNG irudi gisa edo datuak kalkulu-orri batean (CSV) deskarga ditzakezu.',
                 'app-nube-btn': 'Hodeia Sortu',
                 'app-ideas-title': 'Ideia-jasa eta botoak',
                 'app-ideas-desc': 'Bi faseko tresna: lehenik, parte-hartzaileek ideiak modu anonimoan proposatzen dituzte. Gero, denek nahiago dituzten proposamenak bozkatzen dituzte, ezagunenak lehenesteko.',
                 'app-ideas-btn': 'Hasi Ideia-jasa',
                 'app-muro-title': 'Harresi interaktiboa',
-                'app-muro-desc': 'Parte-hartzaileei "post-it" birtualak bidaltzeko aukera ematen die, izenburu eta eduki batekin. Aurkezleak txartelak denbora errealean partekatutako mihise batean mugi eta antola ditzake.',
+                'app-muro-desc': '"Post-it" birtualak bidaltzeko aukera ematen die parte-hartzaileei. Edukia ez da iraunkorra eta ixtean galtzen da, baina harresia PDFra edo datuak kalkulu-orri batera (CSV) esporta ditzakezu.',
                 'app-muro-btn': 'Harresia Ireki'
             },
             'en': {
-                'main-title': 'Application Hub',
+                'main-title': 'Live Connection',
                 'main-subtitle': 'A collection of interactive tools for the classroom.',
+                'instructions-title': 'How to create an activity?',
+                'instructions-body': "To start an activity as a presenter, open the application you want to use and click on the link at the bottom of the screen (usually with the text \"Are you the presenter?\").",
                 'app-vota-title': 'Simple Voting',
                 'app-vota-desc': 'Create multiple-choice polls instantly. Participants join with a code and vote from their devices, viewing the results in real-time updating bar charts.',
                 'app-vota-btn': 'Open Voting',
                 'app-nube-title': 'Word Cloud',
-                'app-nube-desc': 'Gather ideas, concepts, or short answers from the audience and visualize them as a dynamic word cloud. The most repeated words will appear larger.',
+                'app-nube-desc': 'Gather ideas and display them as a dynamic cloud where the most repeated ones stand out in size. You can download the cloud as a PNG image or the data in a spreadsheet (CSV).',
                 'app-nube-btn': 'Create Cloud',
                 'app-ideas-title': 'Brainstorm & Vote',
                 'app-ideas-desc': 'A two-phase tool: first, participants anonymously propose ideas. Then, everyone votes on their preferred proposals to prioritize the most popular ones.',
                 'app-ideas-btn': 'Start Brainstorm',
                 'app-muro-title': 'Interactive Wall',
-                'app-muro-desc': 'Allows participants to send virtual "post-its" with a title and content. The presenter can move and organize the cards on a shared canvas in real time.',
+                'app-muro-desc': 'Allows participants to send virtual "post-its". The content is not persistent and is lost upon closing, but you can export the wall to PDF or the data to a spreadsheet (CSV).',
                 'app-muro-btn': 'Open Wall'
             }
         };
@@ -171,25 +209,21 @@
             if (!translations[lang]) return;
             localStorage.setItem('preferred_language', lang);
             document.documentElement.lang = lang;
-
-            document.getElementById('main-title').innerText = translations[lang]['main-title'];
-            document.getElementById('main-subtitle').innerText = translations[lang]['main-subtitle'];
-
-            document.getElementById('app-vota-title').innerText = translations[lang]['app-vota-title'];
-            document.getElementById('app-vota-desc').innerText = translations[lang]['app-vota-desc'];
-            document.getElementById('app-vota-btn').innerText = translations[lang]['app-vota-btn'];
-
-            document.getElementById('app-nube-title').innerText = translations[lang]['app-nube-title'];
-            document.getElementById('app-nube-desc').innerText = translations[lang]['app-nube-desc'];
-            document.getElementById('app-nube-btn').innerText = translations[lang]['app-nube-btn'];
             
-            document.getElementById('app-ideas-title').innerText = translations[lang]['app-ideas-title'];
-            document.getElementById('app-ideas-desc').innerText = translations[lang]['app-ideas-desc'];
-            document.getElementById('app-ideas-btn').innerText = translations[lang]['app-ideas-btn'];
+            const keys = [
+                'main-title', 'main-subtitle', 'instructions-title', 'instructions-body',
+                'app-vota-title', 'app-vota-desc', 'app-vota-btn',
+                'app-nube-title', 'app-nube-desc', 'app-nube-btn',
+                'app-ideas-title', 'app-ideas-desc', 'app-ideas-btn',
+                'app-muro-title', 'app-muro-desc', 'app-muro-btn'
+            ];
 
-            document.getElementById('app-muro-title').innerText = translations[lang]['app-muro-title'];
-            document.getElementById('app-muro-desc').innerText = translations[lang]['app-muro-desc'];
-            document.getElementById('app-muro-btn').innerText = translations[lang]['app-muro-btn'];
+            keys.forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.innerText = translations[lang][key];
+                }
+            });
         }
 
         window.onload = () => {
