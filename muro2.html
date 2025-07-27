@@ -132,17 +132,17 @@
                        <div class="bg-white p-4 rounded-lg text-center border h-full flex flex-col justify-around">
                            <div>
                                <h3 class="font-bold mb-2 text-gray-700" data-translate-key="scan_qr_label"></h3>
-                               <div id="qrcode-container" class="mx-auto max-w-[160px] bg-white p-2 rounded-lg"></div>
+                               <div id="qrcode-container" class="mx-auto w-full max-w-xs p-4 flex justify-center items-center"></div>
                            </div>
                            <div>
                                <h3 class="font-bold mt-4 mb-2 text-gray-700" data-translate-key="direct_link_label"></h3>
-                               <p id="direct-session-link" class="font-mono bg-gray-100 px-2 py-1 rounded text-sm break-all"></p>
+                               <p id="direct-session-link" onclick="copyToClipboard('direct-session-link', 'link_copied_toast')" class="font-mono bg-gray-100 px-2 py-1 rounded text-sm break-all cursor-pointer hover:bg-gray-200"></p>
                            </div>
                            <div>
                                <h3 class="font-bold mt-4 mb-2 text-gray-700">3. <span data-translate-key="or_go_to"></span></h3>
                                <p id="app-url" class="font-mono text-sm break-all"></p>
                                <p class="text-gray-600 text-sm my-1" data-translate-key="and_enter_code"></p>
-                               <span id="session-code"></span>
+                               <span id="session-code" onclick="copyToClipboard('session-code', 'code_copied_toast')"></span>
                            </div>
                        </div>
                     </div>
@@ -196,6 +196,8 @@
         </div>
     </div>
     
+    <div id="toast" class="fixed bottom-5 right-5 bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg opacity-0 transition-opacity duration-300"></div>
+    
     <footer class="text-center py-2 text-sm text-gray-500 bg-gray-100 hide-on-projection">
         Aplicación creada por <a href="https://bilateria.org" target="_blank" class="underline hover:text-gray-700">Juan José de Haro</a>
     </footer>
@@ -203,11 +205,11 @@
     <script>
         const { jsPDF } = window.jspdf;
         const translations = {
-            'es': { 'create_title': 'Crear un nuevo muro de ideas', 'question_label': 'Título o pregunta del muro:', 'question_placeholder': 'Ej: ¿Qué hemos aprendido hoy?', 'cards_per_person_label': 'Tarjetas por persona:', 'start_session_btn': 'Iniciar Sesión', 'switch_to_participant_2': 'O únete a un muro existente', 'auto_arrange_btn': 'Auto-organizar', 'export_csv_btn': 'Exportar a CSV', 'export_pdf_btn': 'Exportar a PDF', 'projection_btn_text': 'Proyectar', 'scan_qr_label': '1. Escanea el QR', 'direct_link_label': '2. O comparte el enlace', 'or_go_to': 'O ve a', 'and_enter_code': 'e introduce el código:', 'join_title': 'Unirse a un muro', 'session_code_label': 'Código del muro:', 'join_btn': 'Unirse', 'switch_to_presenter': 'O crea un nuevo muro aquí', 'card_title_label': 'Título', 'card_body_label': 'Contenido', 'card_color_label': 'Color de la tarjeta', 'send_btn': 'Enviar Tarjeta', 'completed_title': '¡Gracias por participar!', 'completed_subtitle': 'Has enviado todas tus tarjetas.', 'cards_left_text': 'Puedes enviar {count} tarjeta(s) más.', 'card_sent_confirmation': '¡Tarjeta enviada!', 'alert_no_title_or_body': 'Por favor, escribe un título y un contenido para la tarjeta.', 'pdf_export_error': 'Error al exportar a PDF.' },
-            'ca': { 'create_title': 'Crear un nou mur d\'idees', 'question_label': 'Títol o pregunta del mur:', 'question_placeholder': 'Ex: Què hem après avui?', 'cards_per_person_label': 'Targetes per persona:', 'start_session_btn': 'Iniciar Sessió', 'switch_to_participant_2': 'O uneix-te a un mur existent', 'auto_arrange_btn': 'Autoorganitzar', 'export_csv_btn': 'Exportar a CSV', 'export_pdf_btn': 'Exportar a PDF', 'projection_btn_text': 'Projectar', 'scan_qr_label': '1. Escaneja el QR', 'direct_link_label': '2. O comparteix l\'enllaç', 'or_go_to': 'O ves a', 'and_enter_code': 'i introdueix el codi:', 'join_title': 'Unir-se a un mur', 'session_code_label': 'Codi del mur:', 'join_btn': 'Unir-se', 'switch_to_presenter': 'O crea un nou mur aquí', 'card_title_label': 'Títol', 'card_body_label': 'Contingut', 'card_color_label': 'Color de la targeta', 'send_btn': 'Enviar Targeta', 'completed_title': 'Gràcies per participar!', 'completed_subtitle': 'Has enviat totes les teves targetes.', 'cards_left_text': 'Pots enviar {count} targeta(es) més.', 'card_sent_confirmation': 'Targeta enviada!', 'alert_no_title_or_body': 'Si us plau, escriu un títol i un contingut per a la targeta.', 'pdf_export_error': 'Error en exportar a PDF.' },
-            'gl': { 'create_title': 'Crear un novo muro de ideas', 'question_label': 'Título ou pregunta do muro:', 'question_placeholder': 'Ex: Que aprendemos hoxe?', 'cards_per_person_label': 'Tarxetas por persoa:', 'start_session_btn': 'Iniciar Sesión', 'switch_to_participant_2': 'Ou únete a un muro existente', 'auto_arrange_btn': 'Auto-organizar', 'export_csv_btn': 'Exportar a CSV', 'export_pdf_btn': 'Exportar a PDF', 'projection_btn_text': 'Proxectar', 'scan_qr_label': '1. Escanea o QR', 'direct_link_label': '2. Ou comparte a ligazón', 'or_go_to': 'Ou vai a', 'and_enter_code': 'e introduce o código:', 'join_title': 'Unirse a un muro', 'session_code_label': 'Código do muro:', 'join_btn': 'Unirse', 'switch_to_presenter': 'Ou crea un novo muro aquí', 'card_title_label': 'Título', 'card_body_label': 'Contido', 'card_color_label': 'Cor da tarxeta', 'send_btn': 'Enviar Tarxeta', 'completed_title': 'Grazas por participar!', 'completed_subtitle': 'Enviaches todas as túas tarxetas.', 'cards_left_text': 'Podes enviar {count} tarxeta(s) máis.', 'card_sent_confirmation': 'Tarxeta enviada!', 'alert_no_title_or_body': 'Por favor, escribe un título e un contido para a tarxeta.', 'pdf_export_error': 'Erro ao exportar a PDF.'},
-            'eu': { 'create_title': 'Ideia-horma berria sortu', 'question_label': 'Hormaren izenburua edo galdera:', 'question_placeholder': 'Adib: Zer ikasi dugu gaur?', 'cards_per_person_label': 'Txartelak pertsonako:', 'start_session_btn': 'Saioa Hasi', 'switch_to_participant_2': 'Edo batu lehendik dagoen horma batera', 'auto_arrange_btn': 'Auto-antolatu', 'export_csv_btn': 'Esportatu CSVra', 'export_pdf_btn': 'Esportatu PDFra', 'projection_btn_text': 'Proiektatu', 'scan_qr_label': '1. Eskaneatu QR-a', 'direct_link_label': '2. Edo partekatu esteka', 'or_go_to': 'Edo joan hona', 'and_enter_code': 'eta sartu kodea:', 'join_title': 'Horma batera batu', 'session_code_label': 'Hormaren kodea:', 'join_btn': 'Batu', 'switch_to_presenter': 'Edo sortu horma berri bat hemen', 'card_title_label': 'Izenburua', 'card_body_label': 'Edukia', 'card_color_label': 'Txartelaren kolorea', 'send_btn': 'Txartela Bidali', 'completed_title': 'Eskerrik asko parte hartzeagatik!', 'completed_subtitle': 'Zure txartel guztiak bidali dituzu.', 'cards_left_text': '{count} txartel gehiago bidal ditzakezu.', 'card_sent_confirmation': 'Txartela bidali da!', 'alert_no_title_or_body': 'Mesedez, idatzi izenburu bat eta eduki bat txartelerako.', 'pdf_export_error': 'Errorea PDFra esportatzean.'},
-            'en': { 'create_title': 'Create a new idea wall', 'question_label': 'Wall title or question:', 'question_placeholder': 'E.g., What have we learned today?', 'cards_per_person_label': 'Cards per person:', 'start_session_btn': 'Start Session', 'switch_to_participant_2': 'Or join an existing wall', 'auto_arrange_btn': 'Auto-arrange', 'export_csv_btn': 'Export to CSV', 'export_pdf_btn': 'Export to PDF', 'projection_btn_text': 'Project', 'scan_qr_label': '1. Scan the QR', 'direct_link_label': '2. Or share the link', 'or_go_to': 'Or go to', 'and_enter_code': 'and enter the code:', 'join_title': 'Join a wall', 'session_code_label': 'Wall code:', 'join_btn': 'Join', 'switch_to_presenter': 'Or create a new wall here', 'card_title_label': 'Title', 'card_body_label': 'Content', 'card_color_label': 'Card color', 'send_btn': 'Send Card', 'completed_title': 'Thanks for participating!', 'completed_subtitle': 'You have sent all your cards.', 'cards_left_text': 'You can send {count} more card(s).', 'card_sent_confirmation': 'Card sent!', 'alert_no_title_or_body': 'Please write a title and content for the card.', 'pdf_export_error': 'Error exporting to PDF.'}
+            'es': { 'create_title': 'Crear un nuevo muro de ideas', 'question_label': 'Título o pregunta del muro:', 'question_placeholder': 'Ej: ¿Qué hemos aprendido hoy?', 'cards_per_person_label': 'Tarjetas por persona:', 'start_session_btn': 'Iniciar Sesión', 'switch_to_participant_2': 'O únete a un muro existente', 'auto_arrange_btn': 'Auto-organizar', 'export_csv_btn': 'Exportar a CSV', 'export_pdf_btn': 'Exportar a PDF', 'projection_btn_text': 'Proyectar', 'scan_qr_label': '1. Escanea el QR', 'direct_link_label': '2. O comparte el enlace', 'or_go_to': 'O ve a', 'and_enter_code': 'e introduce el código:', 'join_title': 'Unirse a un muro', 'session_code_label': 'Código del muro:', 'join_btn': 'Unirse', 'switch_to_presenter': 'O crea un nuevo muro aquí', 'card_title_label': 'Título', 'card_body_label': 'Contenido', 'card_color_label': 'Color de la tarjeta', 'send_btn': 'Enviar Tarjeta', 'completed_title': '¡Gracias por participar!', 'completed_subtitle': 'Has enviado todas tus tarjetas.', 'cards_left_text': 'Puedes enviar {count} tarjeta(s) más.', 'card_sent_confirmation': '¡Tarjeta enviada!', 'alert_no_title_or_body': 'Por favor, escribe un título y un contenido para la tarjeta.', 'pdf_export_error': 'Error al exportar a PDF.', 'link_copied_toast': 'Enlace copiado', 'code_copied_toast': 'Código copiado' },
+            'ca': { 'create_title': 'Crear un nou mur d\'idees', 'question_label': 'Títol o pregunta del mur:', 'question_placeholder': 'Ex: Què hem après avui?', 'cards_per_person_label': 'Targetes per persona:', 'start_session_btn': 'Iniciar Sessió', 'switch_to_participant_2': 'O uneix-te a un mur existent', 'auto_arrange_btn': 'Autoorganitzar', 'export_csv_btn': 'Exportar a CSV', 'export_pdf_btn': 'Exportar a PDF', 'projection_btn_text': 'Projectar', 'scan_qr_label': '1. Escaneja el QR', 'direct_link_label': '2. O comparteix l\'enllaç', 'or_go_to': 'O ves a', 'and_enter_code': 'i introdueix el codi:', 'join_title': 'Unir-se a un mur', 'session_code_label': 'Codi del mur:', 'join_btn': 'Unir-se', 'switch_to_presenter': 'O crea un nou mur aquí', 'card_title_label': 'Títol', 'card_body_label': 'Contingut', 'card_color_label': 'Color de la targeta', 'send_btn': 'Enviar Targeta', 'completed_title': 'Gràcies per participar!', 'completed_subtitle': 'Has enviat totes les teves targetes.', 'cards_left_text': 'Pots enviar {count} targeta(es) més.', 'card_sent_confirmation': 'Targeta enviada!', 'alert_no_title_or_body': 'Si us plau, escriu un títol i un contingut per a la targeta.', 'pdf_export_error': 'Error en exportar a PDF.', 'link_copied_toast': 'Enllaç copiat', 'code_copied_toast': 'Codi copiat' },
+            'gl': { 'create_title': 'Crear un novo muro de ideas', 'question_label': 'Título ou pregunta do muro:', 'question_placeholder': 'Ex: Que aprendemos hoxe?', 'cards_per_person_label': 'Tarxetas por persoa:', 'start_session_btn': 'Iniciar Sesión', 'switch_to_participant_2': 'Ou únete a un muro existente', 'auto_arrange_btn': 'Auto-organizar', 'export_csv_btn': 'Exportar a CSV', 'export_pdf_btn': 'Exportar a PDF', 'projection_btn_text': 'Proxectar', 'scan_qr_label': '1. Escanea o QR', 'direct_link_label': '2. Ou comparte a ligazón', 'or_go_to': 'Ou vai a', 'and_enter_code': 'e introduce o código:', 'join_title': 'Unirse a un muro', 'session_code_label': 'Código do muro:', 'join_btn': 'Unirse', 'switch_to_presenter': 'Ou crea un novo muro aquí', 'card_title_label': 'Título', 'card_body_label': 'Contido', 'card_color_label': 'Cor da tarxeta', 'send_btn': 'Enviar Tarxeta', 'completed_title': 'Grazas por participar!', 'completed_subtitle': 'Enviaches todas as túas tarxetas.', 'cards_left_text': 'Podes enviar {count} tarxeta(s) máis.', 'card_sent_confirmation': 'Tarxeta enviada!', 'alert_no_title_or_body': 'Por favor, escribe un título e un contido para a tarxeta.', 'pdf_export_error': 'Erro ao exportar a PDF.', 'link_copied_toast': 'Ligazón copiada', 'code_copied_toast': 'Código copiado' },
+            'eu': { 'create_title': 'Ideia-horma berria sortu', 'question_label': 'Hormaren izenburua edo galdera:', 'question_placeholder': 'Adib: Zer ikasi dugu gaur?', 'cards_per_person_label': 'Txartelak pertsonako:', 'start_session_btn': 'Saioa Hasi', 'switch_to_participant_2': 'Edo batu lehendik dagoen horma batera', 'auto_arrange_btn': 'Auto-antolatu', 'export_csv_btn': 'Esportatu CSVra', 'export_pdf_btn': 'Esportatu PDFra', 'projection_btn_text': 'Proiektatu', 'scan_qr_label': '1. Eskaneatu QR-a', 'direct_link_label': '2. Edo partekatu esteka', 'or_go_to': 'Edo joan hona', 'and_enter_code': 'eta sartu kodea:', 'join_title': 'Horma batera batu', 'session_code_label': 'Hormaren kodea:', 'join_btn': 'Batu', 'switch_to_presenter': 'Edo sortu horma berri bat hemen', 'card_title_label': 'Izenburua', 'card_body_label': 'Edukia', 'card_color_label': 'Txartelaren kolorea', 'send_btn': 'Txartela Bidali', 'completed_title': 'Eskerrik asko parte hartzeagatik!', 'completed_subtitle': 'Zure txartel guztiak bidali dituzu.', 'cards_left_text': '{count} txartel gehiago bidal ditzakezu.', 'card_sent_confirmation': 'Txartela bidali da!', 'alert_no_title_or_body': 'Mesedez, idatzi izenburu bat eta eduki bat txartelerako.', 'pdf_export_error': 'Errorea PDFra esportatzean.', 'link_copied_toast': 'Esteka kopiatu da', 'code_copied_toast': 'Kodea kopiatu da' },
+            'en': { 'create_title': 'Create a new idea wall', 'question_label': 'Wall title or question:', 'question_placeholder': 'E.g., What have we learned today?', 'cards_per_person_label': 'Cards per person:', 'start_session_btn': 'Start Session', 'switch_to_participant_2': 'Or join an existing wall', 'auto_arrange_btn': 'Auto-arrange', 'export_csv_btn': 'Export to CSV', 'export_pdf_btn': 'Export to PDF', 'projection_btn_text': 'Project', 'scan_qr_label': '1. Scan the QR', 'direct_link_label': '2. Or share the link', 'or_go_to': 'Or go to', 'and_enter_code': 'and enter the code:', 'join_title': 'Join a wall', 'session_code_label': 'Wall code:', 'join_btn': 'Join', 'switch_to_presenter': 'Or create a new wall here', 'card_title_label': 'Title', 'card_body_label': 'Content', 'card_color_label': 'Card color', 'send_btn': 'Send Card', 'completed_title': 'Thanks for participating!', 'completed_subtitle': 'You have sent all your cards.', 'cards_left_text': 'You can send {count} more card(s).', 'card_sent_confirmation': 'Card sent!', 'alert_no_title_or_body': 'Please write a title and content for the card.', 'pdf_export_error': 'Error exporting to PDF.', 'link_copied_toast': 'Link copied', 'code_copied_toast': 'Code copied' }
         };
         let currentLang = 'es';
         let peer = null, hostConnection = null, guestConnections = [];
@@ -221,9 +223,22 @@
             localStorage.setItem(`padlet_state_${sessionId}`, JSON.stringify(state));
         }
 
+        function showToast(messageKey) {
+            const toast = document.getElementById('toast');
+            toast.innerText = translations[currentLang][messageKey] || messageKey;
+            toast.style.opacity = 1;
+            setTimeout(() => { toast.style.opacity = 0; }, 2000);
+        }
+
+        function copyToClipboard(elementId, messageKey) {
+            const textToCopy = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(textToCopy).then(() => showToast(messageKey));
+        }
+
         function setLanguage(lang) {
             currentLang = lang;
             document.documentElement.lang = lang;
+            localStorage.setItem('preferred_language', lang);
             document.querySelectorAll('[data-translate-key]').forEach(el => {
                 const key = el.getAttribute('data-translate-key');
                 if (translations[lang]?.[key]) el.innerText = translations[lang][key];
@@ -262,7 +277,11 @@
                 document.getElementById('session-code').innerText = id;
                 document.getElementById('direct-session-link').innerText = sessionUrl;
                 document.getElementById('app-url').innerText = baseUrl.replace(/^https?:\/\//, '');
-                new QRCode(document.getElementById('qrcode-container'), { text: sessionUrl, width: 200, height: 200 });
+                
+                const qrContainer = document.getElementById('qrcode-container');
+                qrContainer.innerHTML = ''; // Limpia el contenedor
+                const size = qrContainer.clientWidth;
+                new QRCode(qrContainer, { text: sessionUrl, width: size, height: size });
             });
             peer.on('connection', conn => {
                 guestConnections.push(conn);
@@ -275,9 +294,9 @@
         function handleGuestData(conn, data) {
             if (data.type === 'new-card') {
                 sessionData.cards.push(data.payload);
-                autoArrangeCards(); // Auto-organizar al recibir nueva tarjeta
+                autoArrangeCards();
             } else {
-                broadcastUpdate();
+                 broadcastUpdate();
             }
         }
 
@@ -322,7 +341,7 @@
         function deleteCard(cardId) {
             event.stopPropagation();
             sessionData.cards = sessionData.cards.filter(c => c.id !== cardId);
-            autoArrangeCards(); // Re-organizar después de borrar
+            autoArrangeCards(); // Reorganiza tras borrar
         }
 
         function autoArrangeCards() {
@@ -331,23 +350,16 @@
             let x = padding, y = padding, maxYInRow = 0;
 
             sessionData.cards.forEach(cardData => {
-                // Si la tarjeta aún no está en el DOM, su altura será desconocida.
-                // Usamos un valor por defecto o esperamos a que se renderice.
-                // Por simplicidad, usaremos un fallback, pero esto puede causar solapamientos
-                // si el contenido de la tarjeta la hace más alta que el fallback.
                 const cardEl = document.getElementById(cardData.id) || { offsetHeight: 120 };
-
-                if (x + cardWidth + padding > canvas.offsetWidth && x > padding) { // Si no cabe en la fila actual
-                    x = padding; // Volver al inicio de la fila
-                    y = maxYInRow; // Bajar a la siguiente fila
+                if (x + cardWidth + padding > canvas.offsetWidth && x > padding) {
+                    x = padding;
+                    y = maxYInRow;
                 }
-                
                 cardData.position = { x, y };
-                
-                x += cardWidth + padding; // Mover a la derecha para la siguiente tarjeta
-                maxYInRow = Math.max(maxYInRow, y + cardEl.offsetHeight + padding); // Actualizar la altura máxima de la fila
+                x += cardWidth + padding;
+                maxYInRow = Math.max(maxYInRow, y + cardEl.offsetHeight + padding);
             });
-            sessionData.pan = {x: 0, y: 0}; // Resetear el paneo para que se vea la cuadrícula ordenada
+            sessionData.pan = {x: 0, y: 0};
             broadcastUpdate();
         }
 
@@ -452,17 +464,18 @@
                 window.removeEventListener('keydown', handleExitProjection);
                 document.getElementById('card-canvas').removeEventListener('click', handleExitProjection);
             }
-            // Re-organizar las tarjetas después de un breve retardo para permitir que el DOM se actualice
-            setTimeout(autoArrangeCards, 300);
+            setTimeout(autoArrangeCards, 300); // Reorganiza al cambiar de modo
         }
         
         window.onload = () => {
             const params = new URLSearchParams(window.location.search);
             const sessionId = params.get('session');
-            const savedLang = localStorage.getItem('preferred_language') || 'es';
-            
-            setLanguage(savedLang);
-            document.getElementById('lang-selector').value = savedLang;
+            const savedLang = localStorage.getItem('preferred_language');
+            const browserLang = (navigator.language || navigator.userLanguage).split('-')[0];
+            const langToSet = savedLang || (translations[browserLang] ? browserLang : 'es');
+
+            setLanguage(langToSet);
+            document.getElementById('lang-selector').value = langToSet;
             
             if (sessionId) {
                 switchView('participant');
