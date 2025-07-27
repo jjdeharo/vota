@@ -36,10 +36,9 @@
             background-color: #fff; cursor: pointer;
         }
 
-        /* Contenedor de las tarjetas (Canvas) */
         #card-canvas {
             position: relative; width: 100%; height: 100%;
-            overflow: hidden; /* Ocultamos el scroll, el paneo es manual */
+            overflow: hidden;
             background-color: #f1f5f9;
             background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
                               linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
@@ -48,11 +47,7 @@
             cursor: grab;
         }
         #card-canvas.panning { cursor: grabbing; }
-
-        #card-container {
-            position: absolute; top: 0; left: 0;
-            width: 100%; height: 100%;
-        }
+        #card-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
 
         .card {
             position: absolute; display: flex; flex-direction: column;
@@ -78,7 +73,6 @@
         }
         .card:hover .delete-card-btn { opacity: 1; }
 
-        /* Vistas y modo proyector */
         #presenter-view { min-height: 80vh; }
         body.projection-mode { overflow: hidden; }
         body.projection-mode #app { max-width: 100%; width: 100%; height: 100vh; margin: 0; }
@@ -102,48 +96,49 @@
 
         <div id="presenter-view" class="hidden flex flex-col">
             <div id="create-session-form" class="hidden p-8 m-auto">
-                <h2 class="text-2xl font-bold mb-6 text-center" data-translate-key="create_title">Crear un nuevo muro</h2>
+                <h2 class="text-2xl font-bold mb-6 text-center" data-translate-key="create_title"></h2>
                 <div class="space-y-4 max-w-md mx-auto">
                     <div>
-                        <label for="question" class="block text-sm font-medium text-gray-700 mb-1" data-translate-key="question_label">Título o pregunta del muro:</label>
-                        <input type="text" id="question" class="w-full p-2 border border-gray-300 rounded-md shadow-sm" data-translate-key-placeholder="question_placeholder" placeholder="Ej: ¿Qué hemos aprendido hoy?">
+                        <label for="question" class="block text-sm font-medium text-gray-700 mb-1" data-translate-key="question_label"></label>
+                        <input type="text" id="question" class="w-full p-2 border border-gray-300 rounded-md shadow-sm" data-translate-key-placeholder="question_placeholder">
                     </div>
                     <div>
-                        <label for="cards-per-person" class="block text-sm font-medium text-gray-700 mb-1" data-translate-key="cards_per_person_label">Tarjetas por persona:</label>
+                        <label for="cards-per-person" class="block text-sm font-medium text-gray-700 mb-1" data-translate-key="cards_per_person_label"></label>
                         <input type="number" id="cards-per-person" value="2" min="1" class="w-full p-2 border border-gray-300 rounded-md shadow-sm">
                     </div>
                     <button onclick="hostSession()" id="host-button" class="w-full themed-bg themed-bg-hover font-bold py-3 px-4 rounded-lg flex items-center justify-center">
-                        <span data-translate-key="start_session_btn">Iniciar Sesión</span>
+                        <span data-translate-key="start_session_btn"></span>
                         <div id="host-loader" class="loader hidden ml-3"></div>
                     </button>
                 </div>
-                 <p class="text-center mt-8"><a href="#" onclick="event.preventDefault(); switchView('participant')" class="text-sm text-gray-500 hover:text-cyan-600" data-translate-key="switch_to_participant_2">O únete a un muro existente</a></p>
+                 <p class="text-center mt-8"><a href="#" onclick="event.preventDefault(); switchView('participant')" class="text-sm text-gray-500 hover:text-cyan-600" data-translate-key="switch_to_participant_2"></a></p>
             </div>
 
             <div id="results-view" class="hidden p-4 flex-grow flex flex-col">
                 <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4 hide-on-projection">
                     <h2 id="results-question" class="text-2xl font-bold text-gray-800 text-center md:text-left flex-shrink-0"></h2>
                     <div class="flex gap-2 flex-wrap justify-center">
-                        <button onclick="autoArrangeCards()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-3 rounded-lg text-sm" data-translate-key="auto_arrange_btn">Auto-organizar</button>
-                        <button onclick="exportPDF()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 rounded-lg text-sm" data-translate-key="export_pdf_btn">Exportar a PDF</button>
-                        <button onclick="toggleProjectionMode()" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-3 rounded-lg text-sm" data-translate-key="projection_btn_text">Proyectar</button>
+                        <button onclick="autoArrangeCards()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-3 rounded-lg text-sm" data-translate-key="auto_arrange_btn"></button>
+                        <button onclick="exportCSV()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-3 rounded-lg text-sm" data-translate-key="export_csv_btn"></button>
+                        <button onclick="exportPDF()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 rounded-lg text-sm" data-translate-key="export_pdf_btn"></button>
+                        <button onclick="toggleProjectionMode()" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-3 rounded-lg text-sm" data-translate-key="projection_btn_text"></button>
                     </div>
                 </div>
                 <div id="results-view-grid" class="flex-grow grid lg:grid-cols-3 gap-4 min-h-0">
                     <div id="sharing-info-container" class="lg:col-span-1 space-y-4 hide-on-projection">
                        <div class="bg-white p-4 rounded-lg text-center border h-full flex flex-col justify-around">
                            <div>
-                               <h3 class="font-bold mb-2 text-gray-700" data-translate-key="scan_qr_label">1. Escanea el QR</h3>
+                               <h3 class="font-bold mb-2 text-gray-700" data-translate-key="scan_qr_label"></h3>
                                <div id="qrcode-container" class="mx-auto max-w-[160px] bg-white p-2 rounded-lg"></div>
                            </div>
                            <div>
-                               <h3 class="font-bold mt-4 mb-2 text-gray-700" data-translate-key="direct_link_label">2. O comparte el enlace</h3>
+                               <h3 class="font-bold mt-4 mb-2 text-gray-700" data-translate-key="direct_link_label"></h3>
                                <p id="direct-session-link" class="font-mono bg-gray-100 px-2 py-1 rounded text-sm break-all"></p>
                            </div>
                            <div>
-                               <h3 class="font-bold mt-4 mb-2 text-gray-700">3. <span data-translate-key="or_go_to">O ve a</span></h3>
+                               <h3 class="font-bold mt-4 mb-2 text-gray-700">3. <span data-translate-key="or_go_to"></span></h3>
                                <p id="app-url" class="font-mono text-sm break-all"></p>
-                               <p class="text-gray-600 text-sm my-1" data-translate-key="and_enter_code">e introduce el código:</p>
+                               <p class="text-gray-600 text-sm my-1" data-translate-key="and_enter_code"></p>
                                <span id="session-code"></span>
                            </div>
                        </div>
@@ -159,15 +154,15 @@
 
         <div id="participant-view" class="hidden p-8">
             <div id="join-session-form">
-                <h2 class="text-2xl font-bold mb-4 text-center" data-translate-key="join_title">Unirse a un muro</h2>
+                <h2 class="text-2xl font-bold mb-4 text-center" data-translate-key="join_title"></h2>
                 <div class="max-w-xs mx-auto">
-                    <label for="code-input" class="block text-sm font-medium text-gray-700 mb-1" data-translate-key="session_code_label">Código del muro:</label>
+                    <label for="code-input" class="block text-sm font-medium text-gray-700 mb-1" data-translate-key="session_code_label"></label>
                     <input type="text" id="code-input" class="w-full p-2 border uppercase border-gray-300 rounded-md">
                     <button onclick="joinSession()" class="mt-4 w-full themed-bg themed-bg-hover font-bold py-3 px-4 rounded-lg">
-                        <span data-translate-key="join_btn">Unirse</span>
+                        <span data-translate-key="join_btn"></span>
                     </button>
                 </div>
-                 <p class="text-center mt-8"><a href="#" onclick="event.preventDefault(); switchView('presenter')" class="text-sm text-gray-500 hover:text-cyan-600" data-translate-key="switch_to_presenter">O crea un nuevo muro aquí</a></p>
+                 <p class="text-center mt-8"><a href="#" onclick="event.preventDefault(); switchView('presenter')" class="text-sm text-gray-500 hover:text-cyan-600" data-translate-key="switch_to_presenter"></a></p>
             </div>
 
             <div id="card-form" class="hidden max-w-md mx-auto">
@@ -175,25 +170,25 @@
                 <p id="cards-left" class="text-sm font-medium text-gray-500 mb-4 text-center"></p>
                 <div class="space-y-4">
                      <div>
-                        <label for="card-title" class="block text-sm font-medium text-gray-700" data-translate-key="card_title_label">Título</label>
+                        <label for="card-title" class="block text-sm font-medium text-gray-700" data-translate-key="card_title_label"></label>
                         <input type="text" id="card-title" maxlength="50" class="mt-1 w-full p-2 border border-gray-300 rounded-md">
                     </div>
                     <div>
-                        <label for="card-body" class="block text-sm font-medium text-gray-700" data-translate-key="card_body_label">Contenido</label>
+                        <label for="card-body" class="block text-sm font-medium text-gray-700" data-translate-key="card_body_label"></label>
                         <textarea id="card-body" rows="3" maxlength="300" class="mt-1 w-full p-2 border border-gray-300 rounded-md"></textarea>
                     </div>
                     <div>
-                        <label for="card-color" class="block text-sm font-medium text-gray-700" data-translate-key="card_color_label">Color</label>
+                        <label for="card-color" class="block text-sm font-medium text-gray-700" data-translate-key="card_color_label"></label>
                         <input type="color" id="card-color" value="#fef08a" class="mt-1 w-16 h-10 p-1 border border-gray-300 rounded-md cursor-pointer">
                     </div>
                 </div>
-                <button id="send-card-btn" onclick="sendCard()" class="mt-6 w-full themed-bg themed-bg-hover font-bold py-2 px-4 rounded-lg" data-translate-key="send_btn">Enviar Tarjeta</button>
+                <button id="send-card-btn" onclick="sendCard()" class="mt-6 w-full themed-bg themed-bg-hover font-bold py-2 px-4 rounded-lg" data-translate-key="send_btn"></button>
                 <p id="participant-info" class="mt-4 text-green-600 text-center"></p>
             </div>
             
             <div id="completed-view" class="hidden text-center py-8">
-                 <h2 class="text-2xl font-bold mt-4" data-translate-key="completed_title">¡Gracias por participar!</h2>
-                 <p class="text-gray-600" data-translate-key="completed_subtitle">Has enviado todas tus tarjetas.</p>
+                 <h2 class="text-2xl font-bold mt-4" data-translate-key="completed_title"></h2>
+                 <p class="text-gray-600" data-translate-key="completed_subtitle"></p>
             </div>
         </div>
     </div>
@@ -205,8 +200,8 @@
     <script>
         const { jsPDF } = window.jspdf;
         const translations = {
-            'es': { 'create_title': 'Crear un nuevo muro de ideas', 'question_label': 'Título o pregunta del muro:', 'question_placeholder': 'Ej: ¿Qué hemos aprendido hoy?', 'cards_per_person_label': 'Tarjetas por persona:', 'start_session_btn': 'Iniciar Sesión', 'switch_to_participant_2': 'O únete a un muro existente', 'auto_arrange_btn': 'Auto-organizar', 'export_pdf_btn': 'Exportar a PDF', 'projection_btn_text': 'Proyectar', 'scan_qr_label': '1. Escanea el QR', 'direct_link_label': '2. O comparte el enlace', 'or_go_to': 'O ve a', 'and_enter_code': 'e introduce el código:', 'join_title': 'Unirse a un muro', 'session_code_label': 'Código del muro:', 'join_btn': 'Unirse', 'switch_to_presenter': 'O crea un nuevo muro aquí', 'card_title_label': 'Título', 'card_body_label': 'Contenido', 'card_color_label': 'Color de la tarjeta', 'send_btn': 'Enviar Tarjeta', 'completed_title': '¡Gracias por participar!', 'completed_subtitle': 'Has enviado todas tus tarjetas.', 'cards_left_text': 'Puedes enviar {count} tarjeta(s) más.', 'card_sent_confirmation': '¡Tarjeta enviada!', 'alert_no_title_or_body': 'Por favor, escribe un título y un contenido para la tarjeta.', 'pdf_export_error': 'Error al exportar a PDF.' },
-            'ca': { 'create_title': 'Crear un nou mur d\'idees', 'question_label': 'Títol o pregunta del mur:', 'question_placeholder': 'Ex: Què hem après avui?', 'cards_per_person_label': 'Targetes per persona:', 'start_session_btn': 'Iniciar Sessió', 'switch_to_participant_2': 'O uneix-te a un mur existent', 'auto_arrange_btn': 'Autoorganitzar', 'export_pdf_btn': 'Exportar a PDF', 'projection_btn_text': 'Projectar', 'scan_qr_label': '1. Escaneja el QR', 'direct_link_label': '2. O comparteix l\'enllaç', 'or_go_to': 'O ves a', 'and_enter_code': 'i introdueix el codi:', 'join_title': 'Unir-se a un mur', 'session_code_label': 'Codi del mur:', 'join_btn': 'Unir-se', 'switch_to_presenter': 'O crea un nou mur aquí', 'card_title_label': 'Títol', 'card_body_label': 'Contingut', 'card_color_label': 'Color de la targeta', 'send_btn': 'Enviar Targeta', 'completed_title': 'Gràcies per participar!', 'completed_subtitle': 'Has enviat totes les teves targetes.', 'cards_left_text': 'Pots enviar {count} targeta(es) més.', 'card_sent_confirmation': 'Targeta enviada!', 'alert_no_title_or_body': 'Si us plau, escriu un títol i un contingut per a la targeta.', 'pdf_export_error': 'Error en exportar a PDF.' }
+            'es': { 'create_title': 'Crear un nuevo muro de ideas', 'question_label': 'Título o pregunta del muro:', 'question_placeholder': 'Ej: ¿Qué hemos aprendido hoy?', 'cards_per_person_label': 'Tarjetas por persona:', 'start_session_btn': 'Iniciar Sesión', 'switch_to_participant_2': 'O únete a un muro existente', 'auto_arrange_btn': 'Auto-organizar', 'export_csv_btn': 'Exportar a CSV', 'export_pdf_btn': 'Exportar a PDF', 'projection_btn_text': 'Proyectar', 'scan_qr_label': '1. Escanea el QR', 'direct_link_label': '2. O comparte el enlace', 'or_go_to': 'O ve a', 'and_enter_code': 'e introduce el código:', 'join_title': 'Unirse a un muro', 'session_code_label': 'Código del muro:', 'join_btn': 'Unirse', 'switch_to_presenter': 'O crea un nuevo muro aquí', 'card_title_label': 'Título', 'card_body_label': 'Contenido', 'card_color_label': 'Color de la tarjeta', 'send_btn': 'Enviar Tarjeta', 'completed_title': '¡Gracias por participar!', 'completed_subtitle': 'Has enviado todas tus tarjetas.', 'cards_left_text': 'Puedes enviar {count} tarjeta(s) más.', 'card_sent_confirmation': '¡Tarjeta enviada!', 'alert_no_title_or_body': 'Por favor, escribe un título y un contenido para la tarjeta.', 'pdf_export_error': 'Error al exportar a PDF.' },
+            'ca': { 'create_title': 'Crear un nou mur d\'idees', 'question_label': 'Títol o pregunta del mur:', 'question_placeholder': 'Ex: Què hem après avui?', 'cards_per_person_label': 'Targetes per persona:', 'start_session_btn': 'Iniciar Sessió', 'switch_to_participant_2': 'O uneix-te a un mur existent', 'auto_arrange_btn': 'Autoorganitzar', 'export_csv_btn': 'Exportar a CSV', 'export_pdf_btn': 'Exportar a PDF', 'projection_btn_text': 'Projectar', 'scan_qr_label': '1. Escaneja el QR', 'direct_link_label': '2. O comparteix l\'enllaç', 'or_go_to': 'O ves a', 'and_enter_code': 'i introdueix el codi:', 'join_title': 'Unir-se a un mur', 'session_code_label': 'Codi del mur:', 'join_btn': 'Unir-se', 'switch_to_presenter': 'O crea un nou mur aquí', 'card_title_label': 'Títol', 'card_body_label': 'Contingut', 'card_color_label': 'Color de la targeta', 'send_btn': 'Enviar Targeta', 'completed_title': 'Gràcies per participar!', 'completed_subtitle': 'Has enviat totes les teves targetes.', 'cards_left_text': 'Pots enviar {count} targeta(es) més.', 'card_sent_confirmation': 'Targeta enviada!', 'alert_no_title_or_body': 'Si us plau, escriu un títol i un contingut per a la targeta.', 'pdf_export_error': 'Error en exportar a PDF.' }
         };
         let currentLang = 'es';
         let peer = null, hostConnection = null, guestConnections = [];
@@ -250,6 +245,7 @@
             document.getElementById('host-button').setAttribute('disabled', true);
             peer = new Peer(Math.random().toString(36).substring(2, 8).toUpperCase());
             peer.on('open', id => {
+                document.getElementById('lang-selector-container').classList.add('hidden');
                 document.getElementById('create-session-form').classList.add('hidden');
                 document.getElementById('results-view').classList.remove('hidden');
                 document.getElementById('results-question').innerText = sessionData.question;
@@ -270,7 +266,6 @@
         
         function handleGuestData(conn, data) {
             if (data.type === 'new-card') {
-                const canvas = document.getElementById('card-canvas');
                 data.payload.position = { x: -sessionData.pan.x + 50, y: -sessionData.pan.y + 50 };
                 sessionData.cards.push(data.payload);
             }
@@ -322,7 +317,7 @@
         }
 
         function autoArrangeCards() {
-            const padding = 20, cardWidth = 220, cardHeight = 120; // Estimación de altura
+            const padding = 20, cardWidth = 220, cardHeight = 120;
             let x = padding, y = padding;
             sessionData.cards.forEach(cardData => {
                 cardData.position = { x, y };
@@ -336,18 +331,41 @@
             broadcastUpdate();
         }
 
+        function exportCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,Titulo,Contenido\n";
+            const escapeCSV = (str) => `"${String(str).replace(/"/g, '""')}"`;
+
+            sessionData.cards.forEach(card => {
+                const row = [escapeCSV(card.title), escapeCSV(card.body)].join(",");
+                csvContent += row + "\r\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `${sessionData.question.replace(/ /g, '_') || 'muro'}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
         function exportPDF() {
-            const canvas = document.getElementById('card-canvas');
-            const originalBg = canvas.style.backgroundColor;
-            canvas.style.backgroundColor = '#f1f5f9';
-            html2canvas(canvas, { scale: 2, useCORS: true, logging: false })
-                .then(cv => {
-                    const imgData = cv.toDataURL('image/png');
-                    const pdf = new jsPDF({ orientation: cv.width > cv.height ? 'l' : 'p', unit: 'px', format: [cv.width, cv.height] });
-                    pdf.addImage(imgData, 'PNG', 0, 0, cv.width, cv.height);
-                    pdf.save(`${sessionData.question.replace(/ /g, '_') || 'muro'}.pdf`);
-                }).catch(err => alert(translations[currentLang].pdf_export_error))
-                  .finally(() => canvas.style.backgroundColor = originalBg);
+            const canvasEl = document.getElementById('card-canvas');
+            html2canvas(canvasEl, { 
+                scale: 2, 
+                useCORS: true, 
+                logging: false,
+                onclone: (doc) => {
+                    // Pone el fondo blanco para la exportación
+                    doc.getElementById('card-canvas').style.backgroundImage = 'none';
+                    doc.getElementById('card-canvas').style.backgroundColor = 'white';
+                }
+            }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF({ orientation: canvas.width > canvas.height ? 'l' : 'p', unit: 'px', format: [canvas.width, canvas.height] });
+                pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+                pdf.save(`${sessionData.question.replace(/ /g, '_') || 'muro'}.pdf`);
+            }).catch(err => alert(translations[currentLang].pdf_export_error));
         }
 
         function joinSession() {
@@ -433,7 +451,6 @@
             }
             setLanguage('es');
 
-            // --- Lógica de arrastre y paneo con InteractJS ---
             interact('.card').draggable({
                 listeners: {
                     move(event) {
@@ -450,7 +467,7 @@
                         broadcastUpdate();
                     },
                     start(event) {
-                        event.stopPropagation(); // Evita que el clic inicie un paneo del canvas
+                        event.stopPropagation(); 
                     }
                 }
             });
