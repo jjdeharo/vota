@@ -392,16 +392,15 @@
             if (data.type === 'new-idea') {
                 const newIdea = { id: 'idea-' + Date.now() + Math.random(), text: data.payload, votes: 0 };
                 sessionData.ideas.push(newIdea);
-                broadcastUpdate(); // Update all clients with the new idea
             } else if (data.type === 'vote') {
                 const { ideaId, delta } = data.payload;
                 const idea = sessionData.ideas.find(i => i.id === ideaId);
                 if (idea) {
-                    idea.votes = Math.max(0, idea.votes + delta);
-                    conn.send({ type: 'vote-confirm', payload: { ideaId, delta } }); // Confirm back to the voter
+                    idea.votes += delta; // permite valores negativos
+                    conn.send({ type: 'vote-confirm', payload: { ideaId, delta } });
                 }
-                broadcastUpdate(); // Update all clients with new vote totals
             }
+            broadcastUpdate();
         }
 
         function updateIdeasListView() {
@@ -412,18 +411,18 @@
             sortedIdeas.forEach(idea => {
                 const card = document.createElement('div');
                 card.className = 'idea-card';
-                if (idea.votes > 0) card.classList.add('has-votes');
+                if (idea.votes !== 0) card.classList.add('has-votes');
                 
                 let content = `<p>${idea.text}</p>`;
                 
                 const controls = document.createElement('div');
                 controls.className = 'flex items-center';
 
-                if (sessionData.phase === 'voting' && idea.votes > 0) {
-                   const voteCount = document.createElement('div');
-                   voteCount.className = 'vote-count';
-                   voteCount.innerText = idea.votes;
-                   controls.appendChild(voteCount);
+                if (sessionData.phase === 'voting') {
+                    const voteCount = document.createElement('div');
+                    voteCount.className = 'vote-count';
+                    voteCount.innerText = idea.votes;
+                    controls.appendChild(voteCount);
                 }
 
                 if (sessionData.phase === 'submission') {
@@ -447,7 +446,6 @@
             const ideaIndex = sessionData.ideas.findIndex(i => i.id === ideaId);
             if (ideaIndex > -1) {
                 sessionData.ideas.splice(ideaIndex, 1);
-                updateIdeasListView();
                 broadcastUpdate();
             }
         }
@@ -455,12 +453,14 @@
         function startVotingPhase() {
             sessionData.phase = 'voting';
             document.getElementById('start-voting-btn').style.display = 'none';
-            updateIdeasListView();
             broadcastUpdate();
         }
         
         function broadcastUpdate() {
-            guestConnections.forEach(conn => conn.send({ type: 'session-data', payload: sessionData }));
+            updateIdeasListView(); // <-- actualiza la proyección
+            guestConnections.forEach(conn =>
+                conn.send({ type: 'session-data', payload: sessionData })
+            );
         }
 
         // --- Participant Logic ---
@@ -477,11 +477,12 @@
                         applyTheme(sessionData.themeColor);
                         updateParticipantView();
                     } else if (data.type === 'vote-confirm') {
+                        // This logic is now simplified as the UI updates instantly
+                        // We just save the confirmed state
                         const { ideaId, delta } = data.payload;
                         participantState.votes[ideaId] = delta === 1 ? 1 : 0;
-                        participantState.castVotes += delta;
+                        participantState.castVotes = Math.max(0, participantState.castVotes + delta);
                         saveVotesToStorage();
-                        updateParticipantView(); // Refresh the view with updated state
                     }
                 });
             });
@@ -538,7 +539,7 @@
                     badge.style.display = 'inline-flex';
                   }
 
-                  button.onclick = () => castVote(idea.id);
+                  button.onclick = () => castVote(idea.id, button);
                   container.appendChild(button);
                 });
             }
@@ -555,14 +556,41 @@
             setTimeout(updateParticipantView, 1500);
         }
 
-        function castVote(ideaId) {
+        function castVote(ideaId, buttonEl) {
           const alreadyVoted = (participantState.votes[ideaId] || 0) === 1;
           const delta = alreadyVoted ? -1 : 1;
 
           if (delta === 1 && participantState.castVotes >= sessionData.votesPerPerson) {
               return;
           }
+          
+          // Update local state and UI immediately
+          participantState.castVotes = Math.max(0, participantState.castVotes + delta);
+          participantState.votes[ideaId] = alreadyVoted ? 0 : 1;
+          saveVotesToStorage();
+          
+          if (alreadyVoted) {
+              buttonEl.classList.remove('voted-idea');
+              const badge = buttonEl.querySelector('.voted-badge');
+              if (badge) badge.style.display = 'none';
+          } else {
+              buttonEl.classList.add('voted-idea');
+              const badge = buttonEl.querySelector('.voted-badge');
+              if (badge) {
+                  badge.textContent = 1;
+                  badge.style.display = 'inline-flex';
+              }
+          }
+          
+          const votesLeft = sessionData.votesPerPerson - participantState.castVotes;
+          document.getElementById('votes-left').innerText = translations[currentLang]['votes_left_text'].replace('{count}', votesLeft);
+
+          // Send vote to host
           hostConnection.send({ type: 'vote', payload: { ideaId, delta } });
+
+          if (participantState.castVotes >= sessionData.votesPerPerson) {
+              setTimeout(() => document.getElementById('completed-view').classList.remove('hidden'), 500);
+          }
         }
         
         // --- Init & Helpers ---
