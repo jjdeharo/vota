@@ -105,6 +105,18 @@
         body.projection-mode #results-question { text-align: center; font-size: 2.5rem; }
         body.projection-mode #ideas-list-container { flex-grow: 1; }
         body.projection-mode .delete-btn { display: none; }
+
+        /* FIX: Reglas para el ancho completo en modo proyección */
+        body.projection-mode #results-view .grid {
+          grid-template-columns: 1fr !important;
+        }
+        body.projection-mode #results-column {
+          grid-column: 1 / -1 !important;
+        }
+        body.projection-mode #results-view {
+          padding: 0.5rem !important;
+          border-radius: 0 !important;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex flex-col items-center justify-start min-h-screen p-4 gap-6">
