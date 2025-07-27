@@ -369,8 +369,11 @@
                 const newIdea = { id: 'idea-' + Date.now() + Math.random(), text: data.payload, votes: 0 };
                 sessionData.ideas.push(newIdea);
             } else if (data.type === 'vote') {
-                const idea = sessionData.ideas.find(i => i.id === data.payload.ideaId);
-                if (idea) idea.votes++;
+                const { ideaId, delta } = data.payload; // delta puede ser +1 o -1
+                const idea = sessionData.ideas.find(i => i.id === ideaId);
+                if (idea) {
+                    idea.votes = Math.max(0, idea.votes + delta); // nunca bajamos de 0
+                }
             }
             updateIdeasListView();
             broadcastUpdate();
@@ -531,20 +534,34 @@
         }
 
         function castVote(ideaId, buttonEl) {
-          if (participantState.castVotes >= sessionData.votesPerPerson) return;
+          const alreadyVoted = participantState.votes[ideaId] === 1; // 1 = ya votado
+          const delta = alreadyVoted ? -1 : 1;
 
-          hostConnection.send({ type: 'vote', payload: { ideaId } });
-          participantState.castVotes++;
-          participantState.votes[ideaId] = (participantState.votes[ideaId] || 0) + 1;
+          // si intenta añadir y ya no le quedan votos, lo ignoramos
+          if (delta === 1 && participantState.castVotes >= sessionData.votesPerPerson) return;
 
-          markVoted(buttonEl, participantState.votes[ideaId]);
+          // enviamos la diferencia (+1 o -1) al host
+          hostConnection.send({ type: 'vote', payload: { ideaId, delta } });
 
-          if (participantState.castVotes >= sessionData.votesPerPerson) {
-            setTimeout(updateParticipantView, 300); // Delay to show last vote
-          } else {
-            const votesLeft = sessionData.votesPerPerson - participantState.castVotes;
-            document.getElementById('votes-left').innerText =
-              translations[currentLang]['votes_left_text'].replace('{count}', votesLeft);
+          // actualizamos estado local
+          participantState.castVotes += delta;
+          participantState.votes[ideaId] = alreadyVoted ? 0 : 1;
+
+          // actualizamos interfaz
+          if (delta === 1) {
+            markVoted(buttonEl, 1);
+          } else { // hemos retirado el voto
+            buttonEl.classList.remove('voted-idea');
+            const badge = buttonEl.querySelector('.voted-badge');
+            if (badge) badge.style.display = 'none';
+          }
+
+          const votesLeft = sessionData.votesPerPerson - participantState.castVotes;
+          document.getElementById('votes-left').innerText =
+            translations[currentLang]['votes_left_text'].replace('{count}', votesLeft);
+
+          if (votesLeft === 0 || votesLeft === sessionData.votesPerPerson) {
+              setTimeout(updateParticipantView, 300);
           }
         }
         
