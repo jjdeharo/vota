@@ -280,6 +280,66 @@
             phase: 'submission' // 'submission' or 'voting'
         };
         let participantState = { submittedIdeas: 0, castVotes: 0, votes: {} }; // votes: { [ideaId]: count }
+        let pendingVotes = {};   // { [ideaId]: 1 | -1 }
+        
+        // --- Storage Functions & Utils ---
+        function saveVotesToStorage() {
+          const sessionId = hostConnection ? hostConnection.peer : null;
+          if (!sessionId) return;
+          localStorage.setItem(`votes_${sessionId}`, JSON.stringify(participantState));
+        }
+
+        function loadVotesFromStorage(sessionId) {
+          if (!sessionId) return;
+          const data = localStorage.getItem(`votes_${sessionId}`);
+          if (data) {
+            try {
+              const loadedState = JSON.parse(data);
+              if (loadedState && typeof loadedState.votes === 'object') {
+                  participantState = loadedState;
+              }
+            } catch (e) {
+                console.error("Error loading votes from storage:", e);
+                participantState = { submittedIdeas: 0, castVotes: 0, votes: {} };
+            }
+          }
+        }
+
+        function recomputeCastVotes() {
+          participantState.castVotes = Object.values(participantState.votes)
+            .reduce((a, v) => a + (v ? 1 : 0), 0);
+        }
+
+        function findIdeaButton(ideaId) {
+          return document.querySelector(`#ideas-to-vote-container button[data-id="${ideaId}"]`);
+        }
+
+        function setButtonPending(btn, isPending) {
+          if (!btn) return;
+          if (isPending) {
+            btn.classList.add('opacity-60', 'pointer-events-none');
+            const badge = btn.querySelector('.voted-badge');
+            if (badge) badge.style.display = 'none';
+          } else {
+            btn.classList.remove('opacity-60', 'pointer-events-none');
+          }
+        }
+
+        function setButtonConfirmed(btn, voted) {
+          if (!btn) return;
+          if (voted) {
+            btn.classList.add('voted-idea');
+            const badge = btn.querySelector('.voted-badge');
+            if (badge) {
+              badge.textContent = 1;
+              badge.style.display = 'inline-flex';
+            }
+          } else {
+            btn.classList.remove('voted-idea');
+            const badge = btn.querySelector('.voted-badge');
+            if (badge) badge.style.display = 'none';
+          }
+        }
 
         // --- UI Logic ---
         function setLanguage(lang) {
@@ -369,13 +429,13 @@
                 const newIdea = { id: 'idea-' + Date.now() + Math.random(), text: data.payload, votes: 0 };
                 sessionData.ideas.push(newIdea);
             } else if (data.type === 'vote') {
-                const { ideaId, delta } = data.payload; // delta puede ser +1 o -1
+                const { ideaId, delta } = data.payload;
                 const idea = sessionData.ideas.find(i => i.id === ideaId);
                 if (idea) {
-                    idea.votes = Math.max(0, idea.votes + delta); // nunca bajamos de 0
+                    idea.votes += delta;
+                    conn.send({ type: 'vote-confirm', payload: { ideaId, delta } });
                 }
             }
-            updateIdeasListView();
             broadcastUpdate();
         }
 
@@ -387,18 +447,18 @@
             sortedIdeas.forEach(idea => {
                 const card = document.createElement('div');
                 card.className = 'idea-card';
-                if (idea.votes > 0) card.classList.add('has-votes');
+                if (idea.votes !== 0) card.classList.add('has-votes');
                 
                 let content = `<p>${idea.text}</p>`;
                 
                 const controls = document.createElement('div');
                 controls.className = 'flex items-center';
 
-                if (sessionData.phase === 'voting' && idea.votes > 0) {
-                   const voteCount = document.createElement('div');
-                   voteCount.className = 'vote-count';
-                   voteCount.innerText = idea.votes;
-                   controls.appendChild(voteCount);
+                if (sessionData.phase === 'voting') {
+                    const voteCount = document.createElement('div');
+                    voteCount.className = 'vote-count';
+                    voteCount.innerText = idea.votes;
+                    controls.appendChild(voteCount);
                 }
 
                 if (sessionData.phase === 'submission') {
@@ -422,7 +482,6 @@
             const ideaIndex = sessionData.ideas.findIndex(i => i.id === ideaId);
             if (ideaIndex > -1) {
                 sessionData.ideas.splice(ideaIndex, 1);
-                updateIdeasListView();
                 broadcastUpdate();
             }
         }
@@ -430,18 +489,21 @@
         function startVotingPhase() {
             sessionData.phase = 'voting';
             document.getElementById('start-voting-btn').style.display = 'none';
-            updateIdeasListView();
             broadcastUpdate();
         }
         
         function broadcastUpdate() {
-            guestConnections.forEach(conn => conn.send({ type: 'session-data', payload: sessionData }));
+            updateIdeasListView();
+            guestConnections.forEach(conn =>
+                conn.send({ type: 'session-data', payload: sessionData })
+            );
         }
 
         // --- Participant Logic ---
         function joinSession() {
             const hostId = document.getElementById('code-input').value.trim().toUpperCase();
             if (!hostId) return;
+            loadVotesFromStorage(hostId); // Load state before connecting
             peer = new Peer();
             peer.on('open', () => {
                 hostConnection = peer.connect(hostId, { reliable: true });
@@ -450,6 +512,30 @@
                         sessionData = data.payload;
                         applyTheme(sessionData.themeColor);
                         updateParticipantView();
+                    } else if (data.type === 'vote-confirm') {
+                        const { ideaId, delta } = data.payload;
+
+                        delete pendingVotes[ideaId];
+
+                        participantState.votes[ideaId] = delta === 1 ? 1 : 0;
+                        recomputeCastVotes();
+                        saveVotesToStorage();
+
+                        const btn = findIdeaButton(ideaId);
+                        setButtonPending(btn, false);
+                        setButtonConfirmed(btn, participantState.votes[ideaId] === 1);
+
+                        const votesLeft = sessionData.votesPerPerson - participantState.castVotes;
+                        const votesLeftEl = document.getElementById('votes-left');
+                        if (votesLeftEl) {
+                          votesLeftEl.innerText = translations[currentLang]['votes_left_text'].replace('{count}', votesLeft);
+                        }
+
+                        if (participantState.castVotes >= sessionData.votesPerPerson &&
+                            sessionData.ideas.some(idea => participantState.votes[idea.id])) {
+                          document.getElementById('completed-view').classList.remove('hidden');
+                          document.getElementById('voting-form').classList.add('hidden');
+                        }
                     }
                 });
             });
@@ -477,39 +563,38 @@
                     document.getElementById('participant-info').innerText = translations[currentLang]['waiting_for_voting'];
                 }
             } else if (sessionData.phase === 'voting') {
-                if (participantState.castVotes < sessionData.votesPerPerson) {
-                    document.getElementById('voting-form').classList.remove('hidden');
-                    document.getElementById('voting-form-title').innerText = sessionData.question;
-                    const votesLeft = sessionData.votesPerPerson - participantState.castVotes;
-                    document.getElementById('votes-left').innerText = translations[currentLang]['votes_left_text'].replace('{count}', votesLeft);
-                    
-                    const container = document.getElementById('ideas-to-vote-container');
-                    container.innerHTML = '';
-                    sessionData.ideas.forEach(idea => {
-                      const button = document.createElement('button');
-                      button.className = 'w-full p-3 border rounded-lg hover:bg-gray-100 flex items-center justify-between text-left';
-                      button.dataset.id = idea.id;
-                      button.innerHTML = `
-                        <span class="truncate mr-3">${idea.text}</span>
-                        <span class="voted-badge" style="display:none"></span>
-                      `;
-
-                      // Si ya ha votado esta idea, marcarla y mostrar contador
-                      const count = participantState.votes[idea.id] || 0;
-                      if (count > 0) {
-                        button.classList.add('voted-idea');
-                        const badge = button.querySelector('.voted-badge');
-                        badge.textContent = count;
-                        badge.style.display = 'inline-flex';
-                      }
-
-                      button.onclick = () => castVote(idea.id, button);
-                      container.appendChild(button);
-                    });
-
-                } else {
+                if (participantState.castVotes >= sessionData.votesPerPerson && sessionData.ideas.some(idea => participantState.votes[idea.id])) {
                     document.getElementById('completed-view').classList.remove('hidden');
+                    return;
                 }
+
+                document.getElementById('voting-form').classList.remove('hidden');
+                document.getElementById('voting-form-title').innerText = sessionData.question;
+                const votesLeft = sessionData.votesPerPerson - participantState.castVotes;
+                document.getElementById('votes-left').innerText = translations[currentLang]['votes_left_text'].replace('{count}', votesLeft);
+                
+                const container = document.getElementById('ideas-to-vote-container');
+                container.innerHTML = '';
+                sessionData.ideas.forEach(idea => {
+                  const button = document.createElement('button');
+                  button.className = 'w-full p-3 border rounded-lg hover:bg-gray-100 flex items-center justify-between text-left';
+                  button.dataset.id = idea.id;
+                  button.innerHTML = `
+                    <span class="truncate mr-3">${idea.text}</span>
+                    <span class="voted-badge" style="display:none"></span>
+                  `;
+                  
+                  const confirmedCount = participantState.votes[idea.id] || 0;
+                  if (confirmedCount > 0) {
+                    setButtonConfirmed(button, true);
+                  }
+                  if (pendingVotes[idea.id]) {
+                    setButtonPending(button, true);
+                  }
+
+                  button.onclick = () => castVote(idea.id, button);
+                  container.appendChild(button);
+                });
             }
         }
 
@@ -518,56 +603,32 @@
             if (!ideaText) return;
             hostConnection.send({ type: 'new-idea', payload: ideaText });
             participantState.submittedIdeas++;
+            saveVotesToStorage();
             document.getElementById('idea-input').value = '';
             document.getElementById('participant-info').innerText = translations[currentLang]['idea_sent_confirmation'];
             setTimeout(updateParticipantView, 1500);
         }
 
-        function markVoted(btn, count) {
-          if (!btn) return;
-          btn.classList.add('voted-idea');
-          const badge = btn.querySelector('.voted-badge');
-          if (badge) {
-            badge.textContent = count;
-            badge.style.display = 'inline-flex';
-          }
-        }
-
         function castVote(ideaId, buttonEl) {
-          const alreadyVoted = participantState.votes[ideaId] === 1; // 1 = ya votado
+          const alreadyVoted = (participantState.votes[ideaId] || 0) === 1;
+          const pending = pendingVotes[ideaId] || 0;
+
+          if (pending !== 0) return;
+
           const delta = alreadyVoted ? -1 : 1;
 
-          // si intenta añadir y ya no le quedan votos, lo ignoramos
-          if (delta === 1 && participantState.castVotes >= sessionData.votesPerPerson) return;
+          if (delta === 1 && participantState.castVotes >= sessionData.votesPerPerson) {
+            return;
+          }
 
-          // enviamos la diferencia (+1 o -1) al host
+          pendingVotes[ideaId] = delta;
+          setButtonPending(buttonEl, true);
+
           hostConnection.send({ type: 'vote', payload: { ideaId, delta } });
-
-          // actualizamos estado local
-          participantState.castVotes += delta;
-          participantState.votes[ideaId] = alreadyVoted ? 0 : 1;
-
-          // actualizamos interfaz
-          if (delta === 1) {
-            markVoted(buttonEl, 1);
-          } else { // hemos retirado el voto
-            buttonEl.classList.remove('voted-idea');
-            const badge = buttonEl.querySelector('.voted-badge');
-            if (badge) badge.style.display = 'none';
-          }
-
-          const votesLeft = sessionData.votesPerPerson - participantState.castVotes;
-          document.getElementById('votes-left').innerText =
-            translations[currentLang]['votes_left_text'].replace('{count}', votesLeft);
-
-          if (votesLeft === 0 || votesLeft === sessionData.votesPerPerson) {
-              setTimeout(updateParticipantView, 300);
-          }
         }
         
         // --- Init & Helpers ---
         function handleExitProjection(event) {
-            // Salir si se presiona Escape o se hace clic fuera de un botón
             if (event.key === 'Escape' || (event.type === 'click' && event.target.tagName !== 'BUTTON' && !event.target.closest('button'))) {
                 if (document.body.classList.contains('projection-mode')) {
                     toggleProjectionMode();
@@ -592,8 +653,8 @@
             const params = new URLSearchParams(window.location.search);
             const sessionId = params.get('session');
             if (sessionId) {
-                switchView('participant');
                 document.getElementById('code-input').value = sessionId;
+                switchView('participant');
                 joinSession();
             } else {
                 switchView('participant');
