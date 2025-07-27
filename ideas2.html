@@ -280,7 +280,7 @@
             phase: 'submission' // 'submission' or 'voting'
         };
         let participantState = { submittedIdeas: 0, castVotes: 0, votes: {} }; // votes: { [ideaId]: count }
-
+        
         // --- Storage Functions ---
         function saveVotesToStorage() {
           const sessionId = hostConnection ? hostConnection.peer : null;
@@ -294,7 +294,10 @@
           if (data) {
             try {
               const loadedState = JSON.parse(data);
-              participantState = { ...participantState, ...loadedState };
+              // Ensure we don't overwrite with old structure if any exists
+              if (loadedState && typeof loadedState.votes === 'object') {
+                  participantState = loadedState;
+              }
             } catch (e) {
                 console.error("Error loading votes from storage:", e);
                 participantState = { submittedIdeas: 0, castVotes: 0, votes: {} };
@@ -389,16 +392,16 @@
             if (data.type === 'new-idea') {
                 const newIdea = { id: 'idea-' + Date.now() + Math.random(), text: data.payload, votes: 0 };
                 sessionData.ideas.push(newIdea);
+                broadcastUpdate(); // Update all clients with the new idea
             } else if (data.type === 'vote') {
                 const { ideaId, delta } = data.payload;
                 const idea = sessionData.ideas.find(i => i.id === ideaId);
                 if (idea) {
                     idea.votes = Math.max(0, idea.votes + delta);
-                    conn.send({ type: 'vote-confirm', payload: { ideaId, delta } });
+                    conn.send({ type: 'vote-confirm', payload: { ideaId, delta } }); // Confirm back to the voter
                 }
+                broadcastUpdate(); // Update all clients with new vote totals
             }
-            updateIdeasListView();
-            broadcastUpdate();
         }
 
         function updateIdeasListView() {
@@ -464,7 +467,7 @@
         function joinSession() {
             const hostId = document.getElementById('code-input').value.trim().toUpperCase();
             if (!hostId) return;
-            loadVotesFromStorage(hostId);
+            loadVotesFromStorage(hostId); // Load state before connecting
             peer = new Peer();
             peer.on('open', () => {
                 hostConnection = peer.connect(hostId, { reliable: true });
@@ -474,11 +477,11 @@
                         applyTheme(sessionData.themeColor);
                         updateParticipantView();
                     } else if (data.type === 'vote-confirm') {
-                      const { ideaId, delta } = data.payload;
-                      participantState.votes[ideaId] = delta === 1 ? 1 : 0;
-                      participantState.castVotes += delta;
-                      saveVotesToStorage();
-                      updateParticipantView();
+                        const { ideaId, delta } = data.payload;
+                        participantState.votes[ideaId] = delta === 1 ? 1 : 0;
+                        participantState.castVotes += delta;
+                        saveVotesToStorage();
+                        updateParticipantView(); // Refresh the view with updated state
                     }
                 });
             });
@@ -506,40 +509,38 @@
                     document.getElementById('participant-info').innerText = translations[currentLang]['waiting_for_voting'];
                 }
             } else if (sessionData.phase === 'voting') {
-                // Habilitar botones de votación que pudieran estar deshabilitados
-                document.querySelectorAll('#ideas-to-vote-container button').forEach(btn => btn.disabled = false);
-
-                if (participantState.castVotes < sessionData.votesPerPerson || true) { // Allow viewing even if votes are spent
-                    document.getElementById('voting-form').classList.remove('hidden');
-                    document.getElementById('voting-form-title').innerText = sessionData.question;
-                    const votesLeft = sessionData.votesPerPerson - participantState.castVotes;
-                    document.getElementById('votes-left').innerText = translations[currentLang]['votes_left_text'].replace('{count}', votesLeft);
-                    
-                    const container = document.getElementById('ideas-to-vote-container');
-                    container.innerHTML = '';
-                    sessionData.ideas.forEach(idea => {
-                      const button = document.createElement('button');
-                      button.className = 'w-full p-3 border rounded-lg hover:bg-gray-100 flex items-center justify-between text-left';
-                      button.dataset.id = idea.id;
-                      button.innerHTML = `
-                        <span class="truncate mr-3">${idea.text}</span>
-                        <span class="voted-badge" style="display:none"></span>
-                      `;
-
-                      const count = participantState.votes[idea.id] || 0;
-                      if (count > 0) {
-                        button.classList.add('voted-idea');
-                        const badge = button.querySelector('.voted-badge');
-                        badge.textContent = count;
-                        badge.style.display = 'inline-flex';
-                      }
-
-                      button.onclick = () => castVote(idea.id, button);
-                      container.appendChild(button);
-                    });
-                } else {
+                if (participantState.castVotes >= sessionData.votesPerPerson && sessionData.ideas.some(idea => participantState.votes[idea.id])) {
                     document.getElementById('completed-view').classList.remove('hidden');
+                    return;
                 }
+
+                document.getElementById('voting-form').classList.remove('hidden');
+                document.getElementById('voting-form-title').innerText = sessionData.question;
+                const votesLeft = sessionData.votesPerPerson - participantState.castVotes;
+                document.getElementById('votes-left').innerText = translations[currentLang]['votes_left_text'].replace('{count}', votesLeft);
+                
+                const container = document.getElementById('ideas-to-vote-container');
+                container.innerHTML = '';
+                sessionData.ideas.forEach(idea => {
+                  const button = document.createElement('button');
+                  button.className = 'w-full p-3 border rounded-lg hover:bg-gray-100 flex items-center justify-between text-left';
+                  button.dataset.id = idea.id;
+                  button.innerHTML = `
+                    <span class="truncate mr-3">${idea.text}</span>
+                    <span class="voted-badge" style="display:none"></span>
+                  `;
+                  
+                  const count = participantState.votes[idea.id] || 0;
+                  if (count > 0) {
+                    button.classList.add('voted-idea');
+                    const badge = button.querySelector('.voted-badge');
+                    badge.textContent = count;
+                    badge.style.display = 'inline-flex';
+                  }
+
+                  button.onclick = () => castVote(idea.id);
+                  container.appendChild(button);
+                });
             }
         }
 
@@ -548,25 +549,20 @@
             if (!ideaText) return;
             hostConnection.send({ type: 'new-idea', payload: ideaText });
             participantState.submittedIdeas++;
-            // Save state after submitting an idea as well
             saveVotesToStorage();
             document.getElementById('idea-input').value = '';
             document.getElementById('participant-info').innerText = translations[currentLang]['idea_sent_confirmation'];
             setTimeout(updateParticipantView, 1500);
         }
 
-        function castVote(ideaId, buttonEl) {
-            const alreadyVoted = participantState.votes[ideaId] === 1;
-            const delta = alreadyVoted ? -1 : 1;
+        function castVote(ideaId) {
+          const alreadyVoted = (participantState.votes[ideaId] || 0) === 1;
+          const delta = alreadyVoted ? -1 : 1;
 
-            if (delta === 1 && participantState.castVotes >= sessionData.votesPerPerson) {
-                return;
-            }
-            
-            // Disable buttons to prevent multiple clicks while waiting for confirmation
-            document.querySelectorAll('#ideas-to-vote-container button').forEach(btn => btn.disabled = true);
-
-            hostConnection.send({ type: 'vote', payload: { ideaId, delta } });
+          if (delta === 1 && participantState.castVotes >= sessionData.votesPerPerson) {
+              return;
+          }
+          hostConnection.send({ type: 'vote', payload: { ideaId, delta } });
         }
         
         // --- Init & Helpers ---
@@ -595,8 +591,8 @@
             const params = new URLSearchParams(window.location.search);
             const sessionId = params.get('session');
             if (sessionId) {
-                switchView('participant');
                 document.getElementById('code-input').value = sessionId;
+                switchView('participant');
                 joinSession();
             } else {
                 switchView('participant');
