@@ -132,7 +132,7 @@
                        <div class="bg-white p-4 rounded-lg text-center border h-full flex flex-col justify-around">
                            <div>
                                <h3 class="font-bold mb-2 text-gray-700" data-translate-key="scan_qr_label"></h3>
-                               <div id="qrcode-container" class="mx-auto max-w-[160px] bg-white p-2 rounded-lg"></div>
+                               <div id="qrcode-container" class="mx-auto w-full p-2"></div>
                            </div>
                            <div>
                                <h3 class="font-bold mt-4 mb-2 text-gray-700" data-translate-key="direct_link_label"></h3>
@@ -277,7 +277,10 @@
                 document.getElementById('session-code').innerText = id;
                 document.getElementById('direct-session-link').innerText = sessionUrl;
                 document.getElementById('app-url').innerText = baseUrl.replace(/^https?:\/\//, '');
-                new QRCode(document.getElementById('qrcode-container'), { text: sessionUrl, width: 150, height: 150 });
+                
+                const qrContainer = document.getElementById('qrcode-container');
+                const size = qrContainer.offsetWidth;
+                new QRCode(qrContainer, { text: sessionUrl, width: size, height: size });
             });
             peer.on('connection', conn => {
                 guestConnections.push(conn);
@@ -290,7 +293,7 @@
         function handleGuestData(conn, data) {
             if (data.type === 'new-card') {
                 sessionData.cards.push(data.payload);
-                autoArrangeCards(); // Reorganiza automáticamente al recibir una tarjeta nueva
+                autoArrangeCards();
             } else {
                  broadcastUpdate();
             }
@@ -337,7 +340,7 @@
         function deleteCard(cardId) {
             event.stopPropagation();
             sessionData.cards = sessionData.cards.filter(c => c.id !== cardId);
-            broadcastUpdate();
+            autoArrangeCards(); // Reorganiza tras borrar
         }
 
         function autoArrangeCards() {
@@ -346,8 +349,7 @@
             let x = padding, y = padding, maxYInRow = 0;
 
             sessionData.cards.forEach(cardData => {
-                const cardEl = document.getElementById(cardData.id) || { offsetHeight: 120 }; // Estima altura si no existe
-
+                const cardEl = document.getElementById(cardData.id) || { offsetHeight: 120 };
                 if (x + cardWidth + padding > canvas.offsetWidth && x > padding) {
                     x = padding;
                     y = maxYInRow;
@@ -461,6 +463,7 @@
                 window.removeEventListener('keydown', handleExitProjection);
                 document.getElementById('card-canvas').removeEventListener('click', handleExitProjection);
             }
+            setTimeout(autoArrangeCards, 300); // Reorganiza al cambiar de modo
         }
         
         window.onload = () => {
