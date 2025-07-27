@@ -37,15 +37,16 @@
             transition: all 0.3s ease-in-out;
             position: relative;
             z-index: 1;
-            min-height: calc(100vh - var(--footer-h) - var(--body-gap));
+            height: calc(100vh - var(--footer-h) - var(--body-gap));
+            min-height: 0;
             overflow: hidden;
             display: flex;
             flex-direction: column;
         }
         /* Cuando queremos que el alto sea solo por contenido */
         #app.auto-height{
-            min-height: auto;
-            height: auto;
+            height:auto;
+            min-height:auto;
         }
 
         .loader {
@@ -115,8 +116,21 @@
         #results-column{ height:auto; min-height:320px; overflow:hidden; }
 
         /* Centrado vertical de las vistas de participante */
-        #participant-view{ margin-top:auto; margin-bottom:auto; }
-        @media (max-height:640px){ #participant-view{ margin-top:0; margin-bottom:0; } }
+        #participant-view{
+            margin:0;
+            align-self:center;
+            width:100%;
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            min-height:100%;
+        }
+        @media (max-height:640px){
+            #participant-view{
+                min-height:auto;
+                justify-content:flex-start;
+            }
+        } }
 
         /* Un poco de respiración en el editor del presentador */
         #presenter-view{ padding:1rem 0; }
