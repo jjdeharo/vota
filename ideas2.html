@@ -280,8 +280,9 @@
             phase: 'submission' // 'submission' or 'voting'
         };
         let participantState = { submittedIdeas: 0, castVotes: 0, votes: {} }; // votes: { [ideaId]: count }
+        let pendingVotes = {};   // { [ideaId]: 1 | -1 }
         
-        // --- Storage Functions ---
+        // --- Storage Functions & Utils ---
         function saveVotesToStorage() {
           const sessionId = hostConnection ? hostConnection.peer : null;
           if (!sessionId) return;
@@ -294,7 +295,6 @@
           if (data) {
             try {
               const loadedState = JSON.parse(data);
-              // Ensure we don't overwrite with old structure if any exists
               if (loadedState && typeof loadedState.votes === 'object') {
                   participantState = loadedState;
               }
@@ -302,6 +302,42 @@
                 console.error("Error loading votes from storage:", e);
                 participantState = { submittedIdeas: 0, castVotes: 0, votes: {} };
             }
+          }
+        }
+
+        function recomputeCastVotes() {
+          participantState.castVotes = Object.values(participantState.votes)
+            .reduce((a, v) => a + (v ? 1 : 0), 0);
+        }
+
+        function findIdeaButton(ideaId) {
+          return document.querySelector(`#ideas-to-vote-container button[data-id="${ideaId}"]`);
+        }
+
+        function setButtonPending(btn, isPending) {
+          if (!btn) return;
+          if (isPending) {
+            btn.classList.add('opacity-60', 'pointer-events-none');
+            const badge = btn.querySelector('.voted-badge');
+            if (badge) badge.style.display = 'none';
+          } else {
+            btn.classList.remove('opacity-60', 'pointer-events-none');
+          }
+        }
+
+        function setButtonConfirmed(btn, voted) {
+          if (!btn) return;
+          if (voted) {
+            btn.classList.add('voted-idea');
+            const badge = btn.querySelector('.voted-badge');
+            if (badge) {
+              badge.textContent = 1;
+              badge.style.display = 'inline-flex';
+            }
+          } else {
+            btn.classList.remove('voted-idea');
+            const badge = btn.querySelector('.voted-badge');
+            if (badge) badge.style.display = 'none';
           }
         }
 
@@ -396,7 +432,7 @@
                 const { ideaId, delta } = data.payload;
                 const idea = sessionData.ideas.find(i => i.id === ideaId);
                 if (idea) {
-                    idea.votes += delta; // permite valores negativos
+                    idea.votes += delta;
                     conn.send({ type: 'vote-confirm', payload: { ideaId, delta } });
                 }
             }
@@ -457,7 +493,7 @@
         }
         
         function broadcastUpdate() {
-            updateIdeasListView(); // <-- actualiza la proyección
+            updateIdeasListView();
             guestConnections.forEach(conn =>
                 conn.send({ type: 'session-data', payload: sessionData })
             );
@@ -477,12 +513,29 @@
                         applyTheme(sessionData.themeColor);
                         updateParticipantView();
                     } else if (data.type === 'vote-confirm') {
-                        // This logic is now simplified as the UI updates instantly
-                        // We just save the confirmed state
                         const { ideaId, delta } = data.payload;
+
+                        delete pendingVotes[ideaId];
+
                         participantState.votes[ideaId] = delta === 1 ? 1 : 0;
-                        participantState.castVotes = Math.max(0, participantState.castVotes + delta);
+                        recomputeCastVotes();
                         saveVotesToStorage();
+
+                        const btn = findIdeaButton(ideaId);
+                        setButtonPending(btn, false);
+                        setButtonConfirmed(btn, participantState.votes[ideaId] === 1);
+
+                        const votesLeft = sessionData.votesPerPerson - participantState.castVotes;
+                        const votesLeftEl = document.getElementById('votes-left');
+                        if (votesLeftEl) {
+                          votesLeftEl.innerText = translations[currentLang]['votes_left_text'].replace('{count}', votesLeft);
+                        }
+
+                        if (participantState.castVotes >= sessionData.votesPerPerson &&
+                            sessionData.ideas.some(idea => participantState.votes[idea.id])) {
+                          document.getElementById('completed-view').classList.remove('hidden');
+                          document.getElementById('voting-form').classList.add('hidden');
+                        }
                     }
                 });
             });
@@ -531,12 +584,12 @@
                     <span class="voted-badge" style="display:none"></span>
                   `;
                   
-                  const count = participantState.votes[idea.id] || 0;
-                  if (count > 0) {
-                    button.classList.add('voted-idea');
-                    const badge = button.querySelector('.voted-badge');
-                    badge.textContent = count;
-                    badge.style.display = 'inline-flex';
+                  const confirmedCount = participantState.votes[idea.id] || 0;
+                  if (confirmedCount > 0) {
+                    setButtonConfirmed(button, true);
+                  }
+                  if (pendingVotes[idea.id]) {
+                    setButtonPending(button, true);
                   }
 
                   button.onclick = () => castVote(idea.id, button);
@@ -558,39 +611,20 @@
 
         function castVote(ideaId, buttonEl) {
           const alreadyVoted = (participantState.votes[ideaId] || 0) === 1;
+          const pending = pendingVotes[ideaId] || 0;
+
+          if (pending !== 0) return;
+
           const delta = alreadyVoted ? -1 : 1;
 
           if (delta === 1 && participantState.castVotes >= sessionData.votesPerPerson) {
-              return;
+            return;
           }
-          
-          // Update local state and UI immediately
-          participantState.castVotes = Math.max(0, participantState.castVotes + delta);
-          participantState.votes[ideaId] = alreadyVoted ? 0 : 1;
-          saveVotesToStorage();
-          
-          if (alreadyVoted) {
-              buttonEl.classList.remove('voted-idea');
-              const badge = buttonEl.querySelector('.voted-badge');
-              if (badge) badge.style.display = 'none';
-          } else {
-              buttonEl.classList.add('voted-idea');
-              const badge = buttonEl.querySelector('.voted-badge');
-              if (badge) {
-                  badge.textContent = 1;
-                  badge.style.display = 'inline-flex';
-              }
-          }
-          
-          const votesLeft = sessionData.votesPerPerson - participantState.castVotes;
-          document.getElementById('votes-left').innerText = translations[currentLang]['votes_left_text'].replace('{count}', votesLeft);
 
-          // Send vote to host
+          pendingVotes[ideaId] = delta;
+          setButtonPending(buttonEl, true);
+
           hostConnection.send({ type: 'vote', payload: { ideaId, delta } });
-
-          if (participantState.castVotes >= sessionData.votesPerPerson) {
-              setTimeout(() => document.getElementById('completed-view').classList.remove('hidden'), 500);
-          }
         }
         
         // --- Init & Helpers ---
