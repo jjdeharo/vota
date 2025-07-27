@@ -46,11 +46,18 @@
             box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
             position: relative;
             transition: all 0.3s ease;
-            flex-grow: 1;
+            flex-basis: 100%; /* Ocupa todo el ancho disponible */
             border: 1px solid #e5e7eb;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            min-width: 0; /* Ayuda a que flexbox maneje bien el desbordamiento de texto */
+        }
+        .idea-card p {
+            flex-grow: 1;
+            word-wrap: break-word; /* Rompe la palabra para evitar desbordamiento */
+            overflow-wrap: break-word;
+            min-width: 0;
         }
         .idea-card.has-votes {
             border-left: 5px solid var(--theme-color-primary);
@@ -60,6 +67,20 @@
             font-size: 1.1rem;
             color: var(--theme-color-primary-dark-text);
             margin-left: 1rem;
+        }
+        .delete-btn {
+            background: transparent;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            margin-left: 1rem;
+            padding: 0.25rem;
+            border-radius: 99px;
+            line-height: 1;
+        }
+        .delete-btn:hover {
+            color: #ef4444;
+            background-color: #fee2e2;
         }
 
         /* Themed styles */
@@ -76,13 +97,26 @@
         #session-code:hover { background-color: #f9fafb; }
 
         /* Projection Mode */
-        body.projection-mode { overflow: hidden; }
+        body.projection-mode { overflow: hidden; cursor: pointer; }
         body.projection-mode #app { max-width: 100%; width: 100%; height: 100vh; border-radius: 0; padding: 1rem; margin: 0 !important; }
         body.projection-mode .hide-on-projection { display: none !important; }
         body.projection-mode #results-column { height: 100%; }
         body.projection-mode #results-view { height: 100%; display: flex; flex-direction: column; }
         body.projection-mode #results-question { text-align: center; font-size: 2.5rem; }
         body.projection-mode #ideas-list-container { flex-grow: 1; }
+        body.projection-mode .delete-btn { display: none; }
+
+        /* FIX: Reglas para el ancho completo en modo proyección */
+        body.projection-mode #results-view .grid {
+          grid-template-columns: 1fr !important;
+        }
+        body.projection-mode #results-column {
+          grid-column: 1 / -1 !important;
+        }
+        body.projection-mode #results-view {
+          padding: 0.5rem !important;
+          border-radius: 0 !important;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex flex-col items-center justify-start min-h-screen p-4 gap-6">
@@ -92,6 +126,8 @@
             <select id="lang-selector" onchange="setLanguage(this.value)" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2">
                 <option value="es">Español</option>
                 <option value="ca">Català</option>
+                <option value="gl">Galego</option>
+                <option value="eu">Euskara</option>
                 <option value="en">English</option>
             </select>
         </div>
@@ -112,11 +148,11 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
                         <label for="ideas-per-person" class="block text-sm font-medium text-gray-700 mb-1" data-translate-key="ideas_per_person_label">Ideas por persona:</label>
-                        <input type="number" id="ideas-per-person" value="3" min="1" class="w-full p-2 border border-gray-300 rounded-md shadow-sm">
+                        <input type="number" id="ideas-per-person" value="1" min="1" class="w-full p-2 border border-gray-300 rounded-md shadow-sm">
                     </div>
                     <div>
                         <label for="votes-per-person" class="block text-sm font-medium text-gray-700 mb-1" data-translate-key="votes_per_person_label">Votos por persona:</label>
-                        <input type="number" id="votes-per-person" value="1" min="1" class="w-full p-2 border border-gray-300 rounded-md shadow-sm">
+                        <input type="number" id="votes-per-person" value="3" min="1" class="w-full p-2 border border-gray-300 rounded-md shadow-sm">
                     </div>
                 </div>
                 <button onclick="hostSession()" id="host-button" class="mt-4 w-full themed-bg themed-bg-hover font-bold py-3 px-4 rounded-lg flex items-center justify-center">
@@ -203,6 +239,8 @@
         const translations = {
             'es': { 'create_title': 'Crear una nueva lista de ideas', 'question_label': 'Título o pregunta:', 'question_placeholder': 'Ej: Ideas para mejorar el patio', 'theme_color_label': 'Color del tema:', 'ideas_per_person_label': 'Ideas por persona:', 'votes_per_person_label': 'Votos por persona:', 'start_session_btn': 'Iniciar Sesión', 'switch_to_participant': '¿Buscas unirte a una sesión? Haz clic aquí.', 'start_voting_btn': 'Iniciar Votación', 'projection_btn_text': 'Proyectar', 'scan_qr_label': '1. Escanea el QR', 'direct_link_label': '2. O comparte el enlace', 'or_go_to': 'O ve a', 'and_enter_code': 'e introduce el código:', 'join_title': 'Unirse a una sesión', 'session_code_label': 'Código de la sesión:', 'code_input_placeholder': 'Introduce el código', 'join_btn': 'Unirse', 'switch_to_presenter': '¿Eres el presentador? Inicia sesión aquí.', 'idea_input_placeholder': 'Escribe tu idea (máx. 200 caracteres)', 'send_btn': 'Enviar Idea', 'voting_form_title': 'Vota por tus ideas favoritas', 'completed_title': '¡Gracias por participar!', 'completed_subtitle': 'Puedes ver los resultados en la pantalla principal.', 'copied_toast': 'Código copiado', 'link_copied_toast': 'Enlace copiado', 'url_copied_toast': 'URL copiada', 'ideas_left_text': 'Te quedan {count} idea(s) por enviar.', 'votes_left_text': 'Puedes votar por {count} idea(s).', 'idea_sent_confirmation': '¡Idea enviada!', 'waiting_for_voting': 'Has enviado todas tus ideas. Esperando que el presentador inicie la votación...' },
             'ca': { 'create_title': 'Crear una nova llista d\'idees', 'question_label': 'Títol o pregunta:', 'question_placeholder': 'Ex: Idees per millorar el pati', 'theme_color_label': 'Color del tema:', 'ideas_per_person_label': 'Idees per persona:', 'votes_per_person_label': 'Vots per persona:', 'start_session_btn': 'Iniciar Sessió', 'switch_to_participant': 'Busques unir-te a una sessió? Fes clic aquí.', 'start_voting_btn': 'Iniciar Votació', 'projection_btn_text': 'Projectar', 'scan_qr_label': '1. Escaneja el QR', 'direct_link_label': '2. O comparteix l\'enllaç', 'or_go_to': 'O ves a', 'and_enter_code': 'i introdueix el codi:', 'join_title': 'Unir-se a una sessió', 'session_code_label': 'Codi de la sessió:', 'code_input_placeholder': 'Introdueix el codi', 'join_btn': 'Unir-se', 'switch_to_presenter': 'Ets el presentador? Inicia sessió aquí.', 'idea_input_placeholder': 'Escriu la teva idea (màx. 200 caràcters)', 'send_btn': 'Enviar Idea', 'voting_form_title': 'Vota per les teves idees preferides', 'completed_title': 'Gràcies per participar!', 'completed_subtitle': 'Pots veure els resultats a la pantalla principal.', 'copied_toast': 'Codi copiat', 'link_copied_toast': 'Enllaç copiat', 'url_copied_toast': 'URL copiada', 'ideas_left_text': 'Et queden {count} idea(es) per enviar.', 'votes_left_text': 'Pots votar per {count} idea(es).', 'idea_sent_confirmation': 'Idea enviada!', 'waiting_for_voting': 'Has enviat totes les teves idees. Esperant que el presentador iniciï la votació...' },
+            'gl': { 'create_title': 'Crear unha nova lista de ideas', 'question_label': 'Título ou pregunta:', 'question_placeholder': 'Ex: Ideas para mellorar o patio', 'theme_color_label': 'Cor do tema:', 'ideas_per_person_label': 'Ideas por persoa:', 'votes_per_person_label': 'Votos por persoa:', 'start_session_btn': 'Iniciar Sesión', 'switch_to_participant': 'Buscas unirte a unha sesión? Fai clic aquí.', 'start_voting_btn': 'Iniciar Votación', 'projection_btn_text': 'Proxectar', 'scan_qr_label': '1. Escanea o QR', 'direct_link_label': '2. Ou comparte a ligazón', 'or_go_to': 'Ou vai a', 'and_enter_code': 'e introduce o código:', 'join_title': 'Unirse a unha sesión', 'session_code_label': 'Código da sesión:', 'code_input_placeholder': 'Introduce o código', 'join_btn': 'Unirse', 'switch_to_presenter': 'Es o presentador? Inicia sesión aquí.', 'idea_input_placeholder': 'Escribe a túa idea (máx. 200 caracteres)', 'send_btn': 'Enviar Idea', 'voting_form_title': 'Vota polas túas ideas favoritas', 'completed_title': 'Grazas por participar!', 'completed_subtitle': 'Podes ver os resultados na pantalla principal.', 'copied_toast': 'Código copiado', 'link_copied_toast': 'Ligazón copiada', 'url_copied_toast': 'URL copiada', 'ideas_left_text': 'Quédanche {count} idea(s) por enviar.', 'votes_left_text': 'Podes votar por {count} idea(s).', 'idea_sent_confirmation': 'Idea enviada!', 'waiting_for_voting': 'Enviaches todas as túas ideas. Agardando a que o presentador inicie a votación...' },
+            'eu': { 'create_title': 'Ideia zerrenda berria sortu', 'question_label': 'Izenburua edo galdera:', 'question_placeholder': 'Adib: Jolastokia hobetzeko ideiak', 'theme_color_label': 'Gaiaren kolorea:', 'ideas_per_person_label': 'Ideiak pertsonako:', 'votes_per_person_label': 'Botoak pertsonako:', 'start_session_btn': 'Saioa Hasi', 'switch_to_participant': 'Saio batean sartu nahi duzu? Egin klik hemen.', 'start_voting_btn': 'Bozketa Hasi', 'projection_btn_text': 'Proiektatu', 'scan_qr_label': '1. Eskaneatu QR-a', 'direct_link_label': '2. Edo partekatu esteka', 'or_go_to': 'Edo joan hona', 'and_enter_code': 'eta sartu kodea:', 'join_title': 'Saio batean sartu', 'session_code_label': 'Saioaren kodea:', 'code_input_placeholder': 'Sartu kodea', 'join_btn': 'Sartu', 'switch_to_presenter': 'Aurkezlea zara? Hasi saioa hemen.', 'idea_input_placeholder': 'Idatzi zure ideia (gehienez 200 karaktere)', 'send_btn': 'Ideia Bidali', 'voting_form_title': 'Bozkatu zure ideia gogokoenak', 'completed_title': 'Eskerrik asko parte hartzeagatik!', 'completed_subtitle': 'Emaitzak pantaila nagusian ikus ditzakezu.', 'copied_toast': 'Kodea kopiatu da', 'link_copied_toast': 'Esteka kopiatu da', 'url_copied_toast': 'URLa kopiatu da', 'ideas_left_text': '{count} ideia geratzen zaizkizu bidaltzeko.', 'votes_left_text': '{count} ideia bozka ditzakezu.', 'idea_sent_confirmation': 'Ideia bidali da!', 'waiting_for_voting': 'Zure ideia guztiak bidali dituzu. Aurkezleak bozketa hasteko zain...' },
             'en': { 'create_title': 'Create a new idea list', 'question_label': 'Title or question:', 'question_placeholder': 'E.g., Ideas to improve the schoolyard', 'theme_color_label': 'Theme color:', 'ideas_per_person_label': 'Ideas per person:', 'votes_per_person_label': 'Votes per person:', 'start_session_btn': 'Start Session', 'switch_to_participant': 'Looking to join a session? Click here.', 'start_voting_btn': 'Start Voting', 'projection_btn_text': 'Project', 'scan_qr_label': '1. Scan the QR', 'direct_link_label': '2. Or share the link', 'or_go_to': 'Or go to', 'and_enter_code': 'and enter the code:', 'join_title': 'Join a session', 'session_code_label': 'Session code:', 'code_input_placeholder': 'Enter the code', 'join_btn': 'Join', 'switch_to_presenter': 'Are you the presenter? Log in here.', 'idea_input_placeholder': 'Write your idea (max 200 chars)', 'send_btn': 'Send Idea', 'voting_form_title': 'Vote for your favorite ideas', 'completed_title': 'Thanks for participating!', 'completed_subtitle': 'You can see the results on the main screen.', 'copied_toast': 'Code copied', 'link_copied_toast': 'Link copied', 'url_copied_toast': 'URL copied', 'ideas_left_text': 'You have {count} idea(s) left to send.', 'votes_left_text': 'You can vote for {count} idea(s).', 'idea_sent_confirmation': 'Idea sent!', 'waiting_for_voting': 'You have sent all your ideas. Waiting for the presenter to start the voting...' }
         };
         let currentLang = 'es';
@@ -213,8 +251,8 @@
         let guestConnections = [];
         let sessionData = {
             question: '',
-            ideasPerPerson: 3,
-            votesPerPerson: 1,
+            ideasPerPerson: 1,
+            votesPerPerson: 3,
             themeColor: '#4f46e5',
             ideas: [], // { id, text, votes }
             phase: 'submission' // 'submission' or 'voting'
@@ -320,17 +358,48 @@
             const container = document.getElementById('ideas-list-container');
             container.innerHTML = '';
             const sortedIdeas = [...sessionData.ideas].sort((a, b) => b.votes - a.votes);
+            
             sortedIdeas.forEach(idea => {
                 const card = document.createElement('div');
                 card.className = 'idea-card';
                 if (idea.votes > 0) card.classList.add('has-votes');
-                let content = `<p class="flex-grow break-all">${idea.text}</p>`;
+                
+                let content = `<p>${idea.text}</p>`;
+                
+                const controls = document.createElement('div');
+                controls.className = 'flex items-center';
+
                 if (sessionData.phase === 'voting' && idea.votes > 0) {
-                   content += `<div class="vote-count">${idea.votes}</div>`;
+                   const voteCount = document.createElement('div');
+                   voteCount.className = 'vote-count';
+                   voteCount.innerText = idea.votes;
+                   controls.appendChild(voteCount);
                 }
+
+                if (sessionData.phase === 'submission') {
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'delete-btn';
+                    deleteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16"><path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5m-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5M4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06m3.5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06m3.5-.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06"/></svg>`;
+                    deleteBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        deleteIdea(idea.id);
+                    };
+                    controls.appendChild(deleteBtn);
+                }
+                
                 card.innerHTML = content;
+                card.appendChild(controls);
                 container.appendChild(card);
             });
+        }
+
+        function deleteIdea(ideaId) {
+            const ideaIndex = sessionData.ideas.findIndex(i => i.id === ideaId);
+            if (ideaIndex > -1) {
+                sessionData.ideas.splice(ideaIndex, 1);
+                updateIdeasListView();
+                broadcastUpdate();
+            }
         }
 
         function startVotingPhase() {
@@ -421,6 +490,28 @@
         }
         
         // --- Init & Helpers ---
+        function handleExitProjection(event) {
+            // Salir si se presiona Escape o se hace clic fuera de un botón
+            if (event.key === 'Escape' || (event.type === 'click' && event.target.tagName !== 'BUTTON' && !event.target.closest('button'))) {
+                if (document.body.classList.contains('projection-mode')) {
+                    toggleProjectionMode();
+                }
+            }
+        }
+
+        function toggleProjectionMode() {
+            const isEntering = !document.body.classList.contains('projection-mode');
+            document.body.classList.toggle('projection-mode');
+
+            if (isEntering) {
+                window.addEventListener('keydown', handleExitProjection);
+                document.getElementById('app').addEventListener('click', handleExitProjection);
+            } else {
+                window.removeEventListener('keydown', handleExitProjection);
+                document.getElementById('app').removeEventListener('click', handleExitProjection);
+            }
+        }
+
         window.onload = () => {
             const params = new URLSearchParams(window.location.search);
             const sessionId = params.get('session');
@@ -435,7 +526,6 @@
             document.getElementById('color-picker').addEventListener('input', (e) => applyTheme(e.target.value));
         };
         
-        function toggleProjectionMode() { document.body.classList.toggle('projection-mode'); }
         function copyText(elementId, toastMessageKey) {
             navigator.clipboard.writeText(document.getElementById(elementId).innerText).then(() => showToast(toastMessageKey));
         }
