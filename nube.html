@@ -420,6 +420,7 @@
         let hostConnection = null;
         let guestConnections = [];
         let wordCounts = {};
+        let displayForms = {};
         let sessionData = {};
         let myWordsCount = 0;
         let sendTimeout = null;
@@ -427,6 +428,21 @@
         let shouldShowSendConfirmation = false;
         let shouldShowConnectionMsg = false;
         let finishedPeers = new Set();
+        
+        function normalizeWord(input, { preserveEnye = true } = {}) {
+            let s = (input || '').trim().toLowerCase();
+            if (!s) return '';
+
+            if (preserveEnye) s = s.replace(/ñ/g, '__ENYE__');
+            s = s.replace(/l·l/gi, 'll');
+            s = s.replace(/['’`-]/g, '');
+            s = s.normalize('NFD').replace(/\p{M}+/gu, '');
+            if (preserveEnye) s = s.replace(/__ENYE__/g, 'ñ');
+            s = s.replace(/·/g, '');
+            s = s.replace(/\s+/g, ' ').trim();
+
+            return s;
+        }
 
         // --- LÓGICA DE LA NUBE DE PALABRAS (D3.js) ---
         const colors = d3.scale.category10();
@@ -472,7 +488,7 @@
             const { width, height } = getAvailableBox();
 
             const wordList = Object.entries(wordCounts)
-                .map(([word, count]) => ({ text: word, count }))
+                .map(([key, count]) => ({ key, text: displayForms[key] || key, count }))
                 .sort((a, b) => b.count - a.count);
 
             const counts   = wordList.map(d => d.count);
@@ -671,6 +687,7 @@
             };
             applyTheme(sessionData.themeColor);
             wordCounts = {};
+            displayForms = {};
             finishedPeers.clear();
             currentLayout = document.getElementById('layout-selector').value;
             
@@ -720,11 +737,16 @@
                 endSessionAndEdit();
             });
         }
-
+        
         function handleNewWord(word) {
-            const normalizedWord = word.trim().toLowerCase();
-            if (normalizedWord === "") return;
-            wordCounts[normalizedWord] = (wordCounts[normalizedWord] || 0) + 1;
+            const original = word.trim();
+            if (!original) return;
+
+            const key = normalizeWord(original);
+
+            if (!displayForms[key]) displayForms[key] = original;
+            wordCounts[key] = (wordCounts[key] || 0) + 1;
+
             drawWordCloud();
         }
         
@@ -744,17 +766,18 @@
                     window.saveAs(blob, 'nube-de-palabras.png');
                 });
         }
-
+        
         function exportCSV() {
-            let csvContent = "data:text/csv;charset=utf-8,Palabra,Frecuencia\n";
-            const wordList = Object.entries(wordCounts).sort((a, b) => b[1] - a[1]);
-            wordList.forEach(function(rowArray) {
-                let row = `"${rowArray[0]}",${rowArray[1]}`;
-                csvContent += row + "\n";
-            });
-            var encodedUri = encodeURI(csvContent);
-            var link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
+            let csv = "data:text/csv;charset=utf-8,Palabra,Normalizada,Frecuencia\n";
+            const rows = Object.entries(wordCounts)
+                .map(([key, count]) => [displayForms[key] || key, key, count])
+                .sort((a, b) => b[2] - a[2]);
+
+            rows.forEach(r => { csv += `"${r[0]}",${r[1]},${r[2]}\n`; });
+
+            const uri = encodeURI(csv);
+            const link = document.createElement("a");
+            link.setAttribute("href", uri);
             link.setAttribute("download", "datos_nube_de_palabras.csv");
             document.body.appendChild(link);
             link.click();
