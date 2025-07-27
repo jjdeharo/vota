@@ -39,18 +39,24 @@
         /* Contenedor de las tarjetas (Canvas) */
         #card-canvas {
             position: relative; width: 100%; height: 100%;
-            overflow: auto; /* PERMITE SCROLLBARS */
+            overflow: hidden; /* Ocultamos el scroll, el paneo es manual */
             background-color: #f1f5f9;
             background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
                               linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
             background-size: 20px 20px;
             border-radius: 0.5rem;
-            touch-action: none;
+            cursor: grab;
         }
+        #card-canvas.panning { cursor: grabbing; }
+
+        #card-container {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+        }
+
         .card {
             position: absolute; display: flex; flex-direction: column;
-            width: 220px;
-            min-height: 100px;
+            width: 220px; min-height: 100px;
             border-radius: 0.5rem;
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
             padding: 0.75rem;
@@ -68,8 +74,7 @@
             background-color: #4b5563; color: white;
             width: 24px; height: 24px; border-radius: 99px;
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer; opacity: 0; transition: opacity 0.2s ease;
-            z-index: 5;
+            cursor: pointer; opacity: 0; transition: opacity 0.2s ease; z-index: 5;
         }
         .card:hover .delete-card-btn { opacity: 1; }
 
@@ -144,7 +149,9 @@
                        </div>
                     </div>
                     <div id="results-column" class="lg:col-span-2 rounded-lg">
-                        <div id="card-canvas"></div>
+                        <div id="card-canvas">
+                            <div id="card-container"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -203,8 +210,15 @@
         };
         let currentLang = 'es';
         let peer = null, hostConnection = null, guestConnections = [];
-        let sessionData = { question: '', cardsPerPerson: 1, cards: [] };
-        let participantState = { submittedCards: 0 };
+        let sessionData = { question: '', cardsPerPerson: 1, cards: [], pan: {x: 0, y: 0} };
+        
+        function getParticipantState(sessionId) {
+            const state = localStorage.getItem(`padlet_state_${sessionId}`);
+            return state ? JSON.parse(state) : { submittedCards: 0 };
+        }
+        function saveParticipantState(sessionId, state) {
+            localStorage.setItem(`padlet_state_${sessionId}`, JSON.stringify(state));
+        }
 
         function setLanguage(lang) {
             currentLang = lang;
@@ -231,6 +245,7 @@
             sessionData.question = document.getElementById('question').value.trim() || 'Muro de Ideas';
             sessionData.cardsPerPerson = parseInt(document.getElementById('cards-per-person').value, 10);
             sessionData.cards = [];
+            sessionData.pan = {x: 0, y: 0};
             document.getElementById('host-loader').classList.remove('hidden');
             document.getElementById('host-button').setAttribute('disabled', true);
             peer = new Peer(Math.random().toString(36).substring(2, 8).toUpperCase());
@@ -256,7 +271,7 @@
         function handleGuestData(conn, data) {
             if (data.type === 'new-card') {
                 const canvas = document.getElementById('card-canvas');
-                data.payload.position = { x: Math.random() * (canvas.offsetWidth - 220), y: Math.random() * (canvas.offsetHeight - 150) };
+                data.payload.position = { x: -sessionData.pan.x + 50, y: -sessionData.pan.y + 50 };
                 sessionData.cards.push(data.payload);
             }
             broadcastUpdate();
@@ -271,11 +286,12 @@
         }
 
         function updatePresenterCards() {
-            const canvas = document.getElementById('card-canvas');
+            const container = document.getElementById('card-container');
+            container.style.transform = `translate(${sessionData.pan.x}px, ${sessionData.pan.y}px)`;
             const existingCardIds = sessionData.cards.map(c => c.id);
             
-            Array.from(canvas.children).forEach(cardEl => {
-                if (!existingCardIds.includes(cardEl.id)) canvas.removeChild(cardEl);
+            Array.from(container.children).forEach(cardEl => {
+                if (!existingCardIds.includes(cardEl.id)) container.removeChild(cardEl);
             });
 
             sessionData.cards.forEach(cardData => {
@@ -288,15 +304,14 @@
                         <div class="delete-card-btn" onclick="deleteCard('${cardData.id}')">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/></svg>
                         </div>`;
-                    canvas.appendChild(cardEl);
+                    container.appendChild(cardEl);
                 }
                 
                 cardEl.querySelector('.card-header').innerText = cardData.title;
                 cardEl.querySelector('.card-body').innerText = cardData.body;
                 cardEl.style.backgroundColor = cardData.color;
-                cardEl.style.transform = `translate(${cardData.position.x}px, ${cardData.position.y}px)`;
-                cardEl.setAttribute('data-x', cardData.position.x);
-                cardEl.setAttribute('data-y', cardData.position.y);
+                cardEl.style.left = `${cardData.position.x}px`;
+                cardEl.style.top = `${cardData.position.y}px`;
             });
         }
 
@@ -307,20 +322,17 @@
         }
 
         function autoArrangeCards() {
-            const canvas = document.getElementById('card-canvas');
-            const padding = 16, cardWidth = 220;
-            let x = padding, y = padding, maxYInRow = 0;
+            const padding = 20, cardWidth = 220, cardHeight = 120; // Estimación de altura
+            let x = padding, y = padding;
             sessionData.cards.forEach(cardData => {
-                const cardEl = document.getElementById(cardData.id);
-                if (!cardEl) return;
-                if (x + cardWidth + padding > canvas.offsetWidth) {
-                    x = padding;
-                    y = maxYInRow;
-                }
                 cardData.position = { x, y };
                 x += cardWidth + padding;
-                maxYInRow = Math.max(maxYInRow, y + cardEl.offsetHeight + padding);
+                if (x + cardWidth > window.innerWidth) {
+                    x = padding;
+                    y += cardHeight + padding;
+                }
             });
+            sessionData.pan = {x: 0, y: 0};
             broadcastUpdate();
         }
 
@@ -347,20 +359,24 @@
                 hostConnection.on('data', data => {
                     if (data.type === 'session-data' || data.type === 'session-update') {
                         sessionData = data.payload;
-                        showCardForm();
+                        showCardForm(hostId);
                     }
                 });
             });
         }
 
-        function showCardForm() {
+        function showCardForm(sessionId) {
             document.getElementById('join-session-form').classList.add('hidden');
+            const participantState = getParticipantState(sessionId);
             const cardsLeft = sessionData.cardsPerPerson - participantState.submittedCards;
+            
             if (cardsLeft > 0) {
                 document.getElementById('card-form').classList.remove('hidden');
+                document.getElementById('completed-view').classList.add('hidden');
                 document.getElementById('card-form-title').innerText = sessionData.question;
                 document.getElementById('cards-left').innerText = translations[currentLang].cards_left_text.replace('{count}', cardsLeft);
             } else {
+                document.getElementById('card-form').classList.add('hidden');
                 document.getElementById('completed-view').classList.remove('hidden');
             }
         }
@@ -369,17 +385,41 @@
             const title = document.getElementById('card-title').value.trim();
             const body = document.getElementById('card-body').value.trim();
             if (!title || !body) { alert(translations[currentLang].alert_no_title_or_body); return; }
+
             hostConnection.send({ type: 'new-card', payload: { id: 'card-' + Date.now() + Math.random(), title, body, color: document.getElementById('card-color').value } });
+            
+            const sessionId = hostConnection.peer;
+            let participantState = getParticipantState(sessionId);
             participantState.submittedCards++;
+            saveParticipantState(sessionId, participantState);
+
             document.getElementById('card-title').value = '';
             document.getElementById('card-body').value = '';
             const infoEl = document.getElementById('participant-info');
             infoEl.innerText = translations[currentLang].card_sent_confirmation;
             setTimeout(() => { infoEl.innerText = ''; }, 2000);
-            showCardForm();
+            showCardForm(sessionId);
         }
         
-        function toggleProjectionMode() { document.body.classList.toggle('projection-mode'); }
+        function handleExitProjection(event) {
+            if (event.key === 'Escape' || event.target.id === 'card-canvas') {
+                if (document.body.classList.contains('projection-mode')) {
+                    toggleProjectionMode();
+                }
+            }
+        }
+
+        function toggleProjectionMode() { 
+            const isEntering = !document.body.classList.contains('projection-mode');
+            document.body.classList.toggle('projection-mode');
+            if(isEntering) {
+                window.addEventListener('keydown', handleExitProjection);
+                document.getElementById('card-canvas').addEventListener('click', handleExitProjection);
+            } else {
+                window.removeEventListener('keydown', handleExitProjection);
+                document.getElementById('card-canvas').removeEventListener('click', handleExitProjection);
+            }
+        }
         
         window.onload = () => {
             const params = new URLSearchParams(window.location.search);
@@ -393,24 +433,39 @@
             }
             setLanguage('es');
 
+            // --- Lógica de arrastre y paneo con InteractJS ---
             interact('.card').draggable({
                 listeners: {
                     move(event) {
                         const target = event.target;
-                        let x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
-                        let y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
-                        target.style.transform = `translate(${x}px, ${y}px)`;
-                        target.setAttribute('data-x', x);
-                        target.setAttribute('data-y', y);
+                        const card = sessionData.cards.find(c => c.id === target.id);
+                        if(card) {
+                            card.position.x += event.dx;
+                            card.position.y += event.dy;
+                            target.style.left = `${card.position.x}px`;
+                            target.style.top = `${card.position.y}px`;
+                        }
                     },
                     end(event) {
-                        const card = sessionData.cards.find(c => c.id === event.target.id);
-                        if (card) {
-                            card.position.x = parseFloat(event.target.getAttribute('data-x')) || 0;
-                            card.position.y = parseFloat(event.target.getAttribute('data-y')) || 0;
-                            broadcastUpdate();
-                        }
+                        broadcastUpdate();
+                    },
+                    start(event) {
+                        event.stopPropagation(); // Evita que el clic inicie un paneo del canvas
                     }
+                }
+            });
+
+            interact('#card-canvas').draggable({
+                onstart: function(event) {
+                    event.target.classList.add('panning');
+                },
+                onmove: function (event) {
+                    sessionData.pan.x += event.dx;
+                    sessionData.pan.y += event.dy;
+                    document.getElementById('card-container').style.transform = `translate(${sessionData.pan.x}px, ${sessionData.pan.y}px)`;
+                },
+                onend: function(event) {
+                     event.target.classList.remove('panning');
                 }
             });
         };
