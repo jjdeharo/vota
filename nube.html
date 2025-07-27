@@ -16,11 +16,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --theme-color-primary: #4f46e5; /* Indigo por defecto */
+            --theme-color-primary: #f97316; /* Naranja por defecto */
             --theme-color-text: #ffffff;
-            --theme-color-content-bg: #f0f5ff;
-            --theme-color-primary-border: #a5b4fc;
-            --theme-color-primary-dark-text: #3730a3;
+            --theme-color-content-bg: #fff7ed;
+            --theme-color-primary-border: #fdba74;
+            --theme-color-primary-dark-text: #c2410c;
             --footer-h: 0px;      /* se rellena por JS */
             --body-gap: 24px;     /* coincide con gap-6 (24px) */
         }
@@ -196,7 +196,7 @@
 
     <div id="app" class="w-full max-w-5xl mx-auto transition-all duration-300 relative my-auto">
         <div id="lang-selector-container" class="absolute top-4 right-4 z-10 hide-on-projection">
-            <select id="lang-selector" onchange="setLanguage(this.value)" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2">
+            <select id="lang-selector" onchange="setLanguage(this.value)" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full p-2">
                 <option value="es">Español</option>
                 <option value="ca">Català</option>
                 <option value="gl">Galego</option>
@@ -212,7 +212,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <div class="md:col-span-2">
                         <label for="question" class="block text-sm font-medium text-gray-700 mb-1" data-translate-key="question_label">Título o pregunta:</label>
-                        <input type="text" id="question" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" data-translate-key-placeholder="question_placeholder" placeholder="Ej: ¿Qué es para ti la biología?">
+                        <input type="text" id="question" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500" data-translate-key-placeholder="question_placeholder" placeholder="Ej: ¿Qué es para ti la biología?">
                     </div>
                     <div>
                         <label for="word-limit" class="block text-sm font-medium text-gray-700 mb-1" data-translate-key="word_limit_label">Palabras por persona:</label>
@@ -222,7 +222,7 @@
 
                 <div>
                     <label for="color-picker" class="block text-sm font-medium text-gray-700 mb-1" data-translate-key="theme_color_label">Color del tema:</label>
-                    <input type="color" id="color-picker" value="#4f46e5" class="w-12 h-12 p-1 border border-gray-300 rounded-md cursor-pointer">
+                    <input type="color" id="color-picker" value="#f97316" class="w-12 h-12 p-1 border border-gray-300 rounded-md cursor-pointer">
                 </div>
 
                 <div class="flex flex-col sm:flex-row gap-4 mt-6">
@@ -239,7 +239,7 @@
                     <input type="text" id="shareable-link-input" readonly class="w-full p-2 border border-gray-300 rounded-md bg-white font-mono text-sm">
                 </div>
                  <p class="text-center mt-8 role-switch-link">
-                    <a href="#" onclick="event.preventDefault(); switchView('participant')" class="text-sm text-gray-500 hover:text-indigo-600" data-translate-key="switch_to_participant">¿Buscas unirte a una sesión? Haz clic aquí.</a>
+                    <a href="#" onclick="event.preventDefault(); switchView('participant')" class="text-sm text-gray-500 hover:text-orange-600" data-translate-key="switch_to_participant">¿Buscas unirte a una sesión? Haz clic aquí.</a>
                 </p>
             </div>
             
@@ -302,14 +302,14 @@
             <div id="join-session-form">
                 <h2 class="text-2xl font-bold mb-4" data-translate-key="join_title">Unirse a una sesión</h2>
                 <label for="code-input" class="block text-sm font-medium text-gray-700 mb-1" data-translate-key="session_code_label">Código de la sesión:</label>
-                <input type="text" id="code-input" class="w-full p-2 border uppercase border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" data-translate-key-placeholder="code_input_placeholder" placeholder="Introduce el código">
+                <input type="text" id="code-input" class="w-full p-2 border uppercase border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500" data-translate-key-placeholder="code_input_placeholder" placeholder="Introduce el código">
                 <button onclick="joinSession()" id="join-button" class="mt-4 w-full themed-bg themed-bg-hover font-bold py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center">
                     <span id="join-button-text" data-translate-key="join_btn">Unirse</span>
                     <div id="join-loader" class="loader hidden ml-3"></div>
                 </button>
                 <p id="join-error" class="text-red-500 text-sm mt-2 hidden"></p>
                 <p class="text-center mt-8 role-switch-link">
-                    <a href="#" onclick="event.preventDefault(); switchView('presenter')" class="text-sm text-gray-500 hover:text-indigo-600" data-translate-key="switch_to_presenter">¿Eres el presentador? Inicia sesión aquí.</a>
+                    <a href="#" onclick="event.preventDefault(); switchView('presenter')" class="text-sm text-gray-500 hover:text-orange-600" data-translate-key="switch_to_presenter">¿Eres el presentador? Inicia sesión aquí.</a>
                 </p>
             </div>
 
@@ -318,7 +318,7 @@
                 <p class="text-gray-600 mb-4" data-translate-key="word_form_instructions">Escribe una palabra o frase corta y pulsa Enviar.</p>
                 <p id="words-left" class="text-sm font-medium text-gray-500 mb-2"></p>
                 <div class="flex gap-2">
-                    <input type="text" id="word-input" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" data-translate-key-placeholder="word_input_placeholder" placeholder="Escribe una palabra...">
+                    <input type="text" id="word-input" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500" data-translate-key-placeholder="word_input_placeholder" placeholder="Escribe una palabra...">
                     <button id="send-word-btn" onclick="sendWord()" class="themed-bg themed-bg-hover font-bold py-2 px-4 rounded-lg transition">
                         <span data-translate-key="send_btn">Enviar</span>
                     </button>
