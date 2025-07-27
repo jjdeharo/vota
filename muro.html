@@ -262,7 +262,7 @@
                 document.getElementById('session-code').innerText = id;
                 document.getElementById('direct-session-link').innerText = sessionUrl;
                 document.getElementById('app-url').innerText = baseUrl.replace(/^https?:\/\//, '');
-                new QRCode(document.getElementById('qrcode-container'), { text: sessionUrl, width: 150, height: 150 });
+                new QRCode(document.getElementById('qrcode-container'), { text: sessionUrl, width: 200, height: 200 });
             });
             peer.on('connection', conn => {
                 guestConnections.push(conn);
