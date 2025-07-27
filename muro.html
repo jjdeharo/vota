@@ -17,16 +17,10 @@
         :root {
             --theme-color-primary: #0891b2; /* Cyan por defecto */
             --theme-color-text: #ffffff;
-            --theme-color-content-bg: #ecfeff;
-            --theme-color-primary-border: #67e8f9;
-            --theme-color-primary-dark-text: #164e63;
         }
-        html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
-        body { font-family: 'Inter', sans-serif; display: flex; flex-direction: column; }
-        #app { display: flex; flex-direction: column; flex-grow: 1; }
+        body { font-family: 'Inter', sans-serif; }
         .themed-bg { background-color: var(--theme-color-primary); color: var(--theme-color-text); }
         .themed-bg-hover:hover { filter: brightness(90%); transition: filter 0.2s; }
-        .themed-content-bg { background-color: var(--theme-color-content-bg); }
         .loader {
             border: 4px solid #f3f3f3;
             border-top: 4px solid var(--theme-color-primary);
@@ -37,35 +31,30 @@
         
         #session-code {
             font-family: monospace; font-size: 2.25rem; font-weight: bold; letter-spacing: 0.1em;
-            padding: 0.5rem 1rem; border: 2px dashed var(--theme-color-primary-border);
-            border-radius: 0.5rem; color: var(--theme-color-primary-dark-text);
-            background-color: #fff; cursor: pointer; transition: background-color 0.2s;
+            padding: 0.5rem 1rem; border: 2px dashed var(--theme-color-primary);
+            border-radius: 0.5rem; color: var(--theme-color-primary);
+            background-color: #fff; cursor: pointer;
         }
-        #session-code:hover { background-color: #f9fafb; }
 
         /* Contenedor de las tarjetas (Canvas) */
         #card-canvas {
-            position: relative;
-            width: 100%;
-            height: 100%;
+            position: relative; width: 100%; height: 100%;
             overflow: auto; /* PERMITE SCROLLBARS */
-            background-image: linear-gradient(45deg, #f1f5f9 25%, transparent 25%), 
-                              linear-gradient(-45deg, #f1f5f9 25%, transparent 25%), 
-                              linear-gradient(45deg, transparent 75%, #f1f5f9 75%), 
-                              linear-gradient(-45deg, transparent 75%, #f1f5f9 75%);
+            background-color: #f1f5f9;
+            background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
             background-size: 20px 20px;
-            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
             border-radius: 0.5rem;
             touch-action: none;
         }
         .card {
             position: absolute; display: flex; flex-direction: column;
-            width: 220px; /* Ancho fijo para consistencia */
+            width: 220px;
             min-height: 100px;
             border-radius: 0.5rem;
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
             padding: 0.75rem;
-            cursor: grab; transition: transform 0.3s ease, box-shadow 0.2s ease;
+            cursor: grab; transition: box-shadow 0.2s ease;
             touch-action: none; box-sizing: border-box;
             border: 1px solid rgba(0,0,0,0.1);
         }
@@ -80,38 +69,36 @@
             width: 24px; height: 24px; border-radius: 99px;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; opacity: 0; transition: opacity 0.2s ease;
+            z-index: 5;
         }
         .card:hover .delete-card-btn { opacity: 1; }
 
         /* Vistas y modo proyector */
-        #presenter-view { flex-grow: 1; display: flex; flex-direction: column; }
-        #results-view { flex-grow: 1; display: flex; flex-direction: column; padding: 1rem; }
-        #results-view-grid { flex-grow: 1; display: grid; grid-template-columns: 1fr; lg:grid-template-columns: repeat(3, 1fr); gap: 1rem; min-height: 0; }
-        #results-column { min-height: 0; }
-        
-        body.projection-mode .hide-on-projection,
-        body.projection-mode footer,
-        body.projection-mode #lang-selector-container { display: none !important; }
-        body.projection-mode #app { padding: 0; }
-        body.projection-mode #results-view { padding: 0.5rem; }
+        #presenter-view { min-height: 80vh; }
+        body.projection-mode { overflow: hidden; }
+        body.projection-mode #app { max-width: 100%; width: 100%; height: 100vh; margin: 0; }
+        body.projection-mode .hide-on-projection { display: none !important; }
+        body.projection-mode #results-view, body.projection-mode #presenter-view { height: 100%; padding: 0.5rem; }
+        body.projection-mode #results-view-grid { display: block; height: 100%; }
+        body.projection-mode #results-column { height: 100%; }
         body.projection-mode #card-canvas { border-radius: 0; }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-gray-100 text-gray-800 flex flex-col items-center justify-center min-h-screen p-4">
 
-    <div id="app" class="w-full max-w-7xl mx-auto bg-white shadow-lg">
+    <div id="app" class="w-full max-w-7xl mx-auto bg-white shadow-lg rounded-xl relative">
         
         <div id="lang-selector-container" class="absolute top-4 right-4 z-20">
-            <select id="lang-selector" onchange="setLanguage(this.value)" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2">
+            <select id="lang-selector" onchange="setLanguage(this.value)" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg">
                 <option value="es">Español</option>
                 <option value="ca">Català</option>
             </select>
         </div>
 
-        <div id="presenter-view" class="hidden">
-            <div id="create-session-form" class="themed-content-bg p-6 md:p-8 rounded-xl m-auto">
-                <h2 class="text-2xl font-bold mb-6" data-translate-key="create_title">Crear un nuevo muro</h2>
-                <div class="space-y-4">
+        <div id="presenter-view" class="hidden flex flex-col">
+            <div id="create-session-form" class="hidden p-8 m-auto">
+                <h2 class="text-2xl font-bold mb-6 text-center" data-translate-key="create_title">Crear un nuevo muro</h2>
+                <div class="space-y-4 max-w-md mx-auto">
                     <div>
                         <label for="question" class="block text-sm font-medium text-gray-700 mb-1" data-translate-key="question_label">Título o pregunta del muro:</label>
                         <input type="text" id="question" class="w-full p-2 border border-gray-300 rounded-md shadow-sm" data-translate-key-placeholder="question_placeholder" placeholder="Ej: ¿Qué hemos aprendido hoy?">
@@ -120,61 +107,65 @@
                         <label for="cards-per-person" class="block text-sm font-medium text-gray-700 mb-1" data-translate-key="cards_per_person_label">Tarjetas por persona:</label>
                         <input type="number" id="cards-per-person" value="2" min="1" class="w-full p-2 border border-gray-300 rounded-md shadow-sm">
                     </div>
+                    <button onclick="hostSession()" id="host-button" class="w-full themed-bg themed-bg-hover font-bold py-3 px-4 rounded-lg flex items-center justify-center">
+                        <span data-translate-key="start_session_btn">Iniciar Sesión</span>
+                        <div id="host-loader" class="loader hidden ml-3"></div>
+                    </button>
                 </div>
-                <button onclick="hostSession()" id="host-button" class="mt-6 w-full themed-bg themed-bg-hover font-bold py-3 px-4 rounded-lg flex items-center justify-center">
-                    <span data-translate-key="start_session_btn">Iniciar Sesión</span>
-                    <div id="host-loader" class="loader hidden ml-3"></div>
-                </button>
-                 <p class="text-center mt-8"><a href="#" onclick="event.preventDefault(); switchView('participant')" class="text-sm text-gray-500 hover:text-cyan-600" data-translate-key="switch_to_participant">¿Buscas unirte a un muro? Haz clic aquí.</a></p>
+                 <p class="text-center mt-8"><a href="#" onclick="event.preventDefault(); switchView('participant')" class="text-sm text-gray-500 hover:text-cyan-600" data-translate-key="switch_to_participant_2">O únete a un muro existente</a></p>
             </div>
 
-            <div id="results-view" class="hidden">
+            <div id="results-view" class="hidden p-4 flex-grow flex flex-col">
                 <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4 hide-on-projection">
                     <h2 id="results-question" class="text-2xl font-bold text-gray-800 text-center md:text-left flex-shrink-0"></h2>
                     <div class="flex gap-2 flex-wrap justify-center">
                         <button onclick="autoArrangeCards()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-3 rounded-lg text-sm" data-translate-key="auto_arrange_btn">Auto-organizar</button>
-                         <button onclick="exportPDF()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 rounded-lg text-sm" data-translate-key="export_pdf_btn">Exportar a PDF</button>
+                        <button onclick="exportPDF()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 rounded-lg text-sm" data-translate-key="export_pdf_btn">Exportar a PDF</button>
                         <button onclick="toggleProjectionMode()" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-3 rounded-lg text-sm" data-translate-key="projection_btn_text">Proyectar</button>
                     </div>
                 </div>
-                <div id="results-view-grid" class="lg:grid-cols-3">
+                <div id="results-view-grid" class="flex-grow grid lg:grid-cols-3 gap-4 min-h-0">
                     <div id="sharing-info-container" class="lg:col-span-1 space-y-4 hide-on-projection">
-                       <div class="bg-white p-4 rounded-lg text-center border">
-                           <h3 class="font-bold mb-2 text-gray-700" data-translate-key="scan_qr_label">1. Escanea el QR</h3>
-                           <div id="qrcode-container" class="mx-auto max-w-[160px] bg-white p-2 rounded-lg"></div>
-                       </div>
-                        <div class="bg-white p-4 rounded-lg text-center border">
-                            <h3 class="font-bold mb-2 text-gray-700" data-translate-key="direct_link_label">2. O comparte el enlace</h3>
-                            <p id="direct-session-link" class="font-mono bg-gray-100 px-2 py-1 rounded text-sm break-all"></p>
-                       </div>
-                       <div class="bg-white p-4 rounded-lg text-center border">
-                           <h3 class="font-bold mb-2 text-gray-700">3. <span data-translate-key="or_go_to">O ve a</span></h3>
-                           <p id="app-url" class="font-mono text-sm break-all"></p>
-                           <p class="text-gray-600 text-sm my-1" data-translate-key="and_enter_code">e introduce el código:</p>
-                           <span id="session-code"></span>
+                       <div class="bg-white p-4 rounded-lg text-center border h-full flex flex-col justify-around">
+                           <div>
+                               <h3 class="font-bold mb-2 text-gray-700" data-translate-key="scan_qr_label">1. Escanea el QR</h3>
+                               <div id="qrcode-container" class="mx-auto max-w-[160px] bg-white p-2 rounded-lg"></div>
+                           </div>
+                           <div>
+                               <h3 class="font-bold mt-4 mb-2 text-gray-700" data-translate-key="direct_link_label">2. O comparte el enlace</h3>
+                               <p id="direct-session-link" class="font-mono bg-gray-100 px-2 py-1 rounded text-sm break-all"></p>
+                           </div>
+                           <div>
+                               <h3 class="font-bold mt-4 mb-2 text-gray-700">3. <span data-translate-key="or_go_to">O ve a</span></h3>
+                               <p id="app-url" class="font-mono text-sm break-all"></p>
+                               <p class="text-gray-600 text-sm my-1" data-translate-key="and_enter_code">e introduce el código:</p>
+                               <span id="session-code"></span>
+                           </div>
                        </div>
                     </div>
-                    <div id="results-column" class="lg:col-span-2 bg-gray-200 rounded-lg">
+                    <div id="results-column" class="lg:col-span-2 rounded-lg">
                         <div id="card-canvas"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div id="participant-view" class="hidden m-auto">
-            <div id="join-session-form" class="bg-white p-8 rounded-xl">
-                <h2 class="text-2xl font-bold mb-4" data-translate-key="join_title">Unirse a un muro</h2>
-                <label for="code-input" class="block text-sm font-medium text-gray-700 mb-1" data-translate-key="session_code_label">Código del muro:</label>
-                <input type="text" id="code-input" class="w-full p-2 border uppercase border-gray-300 rounded-md">
-                <button onclick="joinSession()" class="mt-4 w-full themed-bg themed-bg-hover font-bold py-3 px-4 rounded-lg">
-                    <span data-translate-key="join_btn">Unirse</span>
-                </button>
-                 <p class="text-center mt-8"><a href="#" onclick="event.preventDefault(); switchView('presenter')" class="text-sm text-gray-500 hover:text-cyan-600" data-translate-key="switch_to_presenter">¿Eres el presentador? Crea un muro aquí.</a></p>
+        <div id="participant-view" class="hidden p-8">
+            <div id="join-session-form">
+                <h2 class="text-2xl font-bold mb-4 text-center" data-translate-key="join_title">Unirse a un muro</h2>
+                <div class="max-w-xs mx-auto">
+                    <label for="code-input" class="block text-sm font-medium text-gray-700 mb-1" data-translate-key="session_code_label">Código del muro:</label>
+                    <input type="text" id="code-input" class="w-full p-2 border uppercase border-gray-300 rounded-md">
+                    <button onclick="joinSession()" class="mt-4 w-full themed-bg themed-bg-hover font-bold py-3 px-4 rounded-lg">
+                        <span data-translate-key="join_btn">Unirse</span>
+                    </button>
+                </div>
+                 <p class="text-center mt-8"><a href="#" onclick="event.preventDefault(); switchView('presenter')" class="text-sm text-gray-500 hover:text-cyan-600" data-translate-key="switch_to_presenter">O crea un nuevo muro aquí</a></p>
             </div>
 
-            <div id="card-form" class="hidden bg-white p-8 rounded-xl">
-                <h2 id="card-form-title" class="text-2xl font-bold mb-4"></h2>
-                <p id="cards-left" class="text-sm font-medium text-gray-500 mb-4"></p>
+            <div id="card-form" class="hidden max-w-md mx-auto">
+                <h2 id="card-form-title" class="text-2xl font-bold mb-4 text-center"></h2>
+                <p id="cards-left" class="text-sm font-medium text-gray-500 mb-4 text-center"></p>
                 <div class="space-y-4">
                      <div>
                         <label for="card-title" class="block text-sm font-medium text-gray-700" data-translate-key="card_title_label">Título</label>
@@ -190,7 +181,7 @@
                     </div>
                 </div>
                 <button id="send-card-btn" onclick="sendCard()" class="mt-6 w-full themed-bg themed-bg-hover font-bold py-2 px-4 rounded-lg" data-translate-key="send_btn">Enviar Tarjeta</button>
-                <p id="participant-info" class="mt-4 text-green-600"></p>
+                <p id="participant-info" class="mt-4 text-green-600 text-center"></p>
             </div>
             
             <div id="completed-view" class="hidden text-center py-8">
@@ -207,8 +198,8 @@
     <script>
         const { jsPDF } = window.jspdf;
         const translations = {
-            'es': { 'create_title': 'Crear un nuevo muro de ideas', 'question_label': 'Título o pregunta del muro:', 'question_placeholder': 'Ej: ¿Qué hemos aprendido hoy?', 'cards_per_person_label': 'Tarjetas por persona:', 'start_session_btn': 'Iniciar Sesión', 'switch_to_participant': '¿Buscas unirte a un muro? Haz clic aquí.', 'auto_arrange_btn': 'Auto-organizar', 'export_pdf_btn': 'Exportar a PDF', 'projection_btn_text': 'Proyectar', 'scan_qr_label': '1. Escanea el QR', 'direct_link_label': '2. O comparte el enlace', 'or_go_to': 'O ve a', 'and_enter_code': 'e introduce el código:', 'join_title': 'Unirse a un muro', 'session_code_label': 'Código del muro:', 'join_btn': 'Unirse', 'switch_to_presenter': '¿Eres el presentador? Crea un muro aquí.', 'card_title_label': 'Título', 'card_body_label': 'Contenido', 'card_color_label': 'Color de la tarjeta', 'send_btn': 'Enviar Tarjeta', 'completed_title': '¡Gracias por participar!', 'completed_subtitle': 'Has enviado todas tus tarjetas.', 'cards_left_text': 'Puedes enviar {count} tarjeta(s) más.', 'card_sent_confirmation': '¡Tarjeta enviada!', 'alert_no_title_or_body': 'Por favor, escribe un título y un contenido para la tarjeta.', 'pdf_export_error': 'Error al exportar a PDF.' },
-            'ca': { 'create_title': 'Crear un nou mur d\'idees', 'question_label': 'Títol o pregunta del mur:', 'question_placeholder': 'Ex: Què hem après avui?', 'cards_per_person_label': 'Targetes per persona:', 'start_session_btn': 'Iniciar Sessió', 'switch_to_participant': 'Busques unir-te a un mur? Fes clic aquí.', 'auto_arrange_btn': 'Autoorganitzar', 'export_pdf_btn': 'Exportar a PDF', 'projection_btn_text': 'Projectar', 'scan_qr_label': '1. Escaneja el QR', 'direct_link_label': '2. O comparteix l\'enllaç', 'or_go_to': 'O ves a', 'and_enter_code': 'i introdueix el codi:', 'join_title': 'Unir-se a un mur', 'session_code_label': 'Codi del mur:', 'join_btn': 'Unir-se', 'switch_to_presenter': 'Ets el presentador? Crea un mur aquí.', 'card_title_label': 'Títol', 'card_body_label': 'Contingut', 'card_color_label': 'Color de la targeta', 'send_btn': 'Enviar Targeta', 'completed_title': 'Gràcies per participar!', 'completed_subtitle': 'Has enviat totes les teves targetes.', 'cards_left_text': 'Pots enviar {count} targeta(es) més.', 'card_sent_confirmation': 'Targeta enviada!', 'alert_no_title_or_body': 'Si us plau, escriu un títol i un contingut per a la targeta.', 'pdf_export_error': 'Error en exportar a PDF.' }
+            'es': { 'create_title': 'Crear un nuevo muro de ideas', 'question_label': 'Título o pregunta del muro:', 'question_placeholder': 'Ej: ¿Qué hemos aprendido hoy?', 'cards_per_person_label': 'Tarjetas por persona:', 'start_session_btn': 'Iniciar Sesión', 'switch_to_participant_2': 'O únete a un muro existente', 'auto_arrange_btn': 'Auto-organizar', 'export_pdf_btn': 'Exportar a PDF', 'projection_btn_text': 'Proyectar', 'scan_qr_label': '1. Escanea el QR', 'direct_link_label': '2. O comparte el enlace', 'or_go_to': 'O ve a', 'and_enter_code': 'e introduce el código:', 'join_title': 'Unirse a un muro', 'session_code_label': 'Código del muro:', 'join_btn': 'Unirse', 'switch_to_presenter': 'O crea un nuevo muro aquí', 'card_title_label': 'Título', 'card_body_label': 'Contenido', 'card_color_label': 'Color de la tarjeta', 'send_btn': 'Enviar Tarjeta', 'completed_title': '¡Gracias por participar!', 'completed_subtitle': 'Has enviado todas tus tarjetas.', 'cards_left_text': 'Puedes enviar {count} tarjeta(s) más.', 'card_sent_confirmation': '¡Tarjeta enviada!', 'alert_no_title_or_body': 'Por favor, escribe un título y un contenido para la tarjeta.', 'pdf_export_error': 'Error al exportar a PDF.' },
+            'ca': { 'create_title': 'Crear un nou mur d\'idees', 'question_label': 'Títol o pregunta del mur:', 'question_placeholder': 'Ex: Què hem après avui?', 'cards_per_person_label': 'Targetes per persona:', 'start_session_btn': 'Iniciar Sessió', 'switch_to_participant_2': 'O uneix-te a un mur existent', 'auto_arrange_btn': 'Autoorganitzar', 'export_pdf_btn': 'Exportar a PDF', 'projection_btn_text': 'Projectar', 'scan_qr_label': '1. Escaneja el QR', 'direct_link_label': '2. O comparteix l\'enllaç', 'or_go_to': 'O ves a', 'and_enter_code': 'i introdueix el codi:', 'join_title': 'Unir-se a un mur', 'session_code_label': 'Codi del mur:', 'join_btn': 'Unir-se', 'switch_to_presenter': 'O crea un nou mur aquí', 'card_title_label': 'Títol', 'card_body_label': 'Contingut', 'card_color_label': 'Color de la targeta', 'send_btn': 'Enviar Targeta', 'completed_title': 'Gràcies per participar!', 'completed_subtitle': 'Has enviat totes les teves targetes.', 'cards_left_text': 'Pots enviar {count} targeta(es) més.', 'card_sent_confirmation': 'Targeta enviada!', 'alert_no_title_or_body': 'Si us plau, escriu un títol i un contingut per a la targeta.', 'pdf_export_error': 'Error en exportar a PDF.' }
         };
         let currentLang = 'es';
         let peer = null, hostConnection = null, guestConnections = [];
@@ -227,8 +218,13 @@
             });
         }
         function switchView(view) {
-            document.getElementById('presenter-view').classList.toggle('hidden', view !== 'presenter');
-            document.getElementById('participant-view').classList.toggle('hidden', view !== 'participant');
+            const isPresenter = view === 'presenter';
+            document.getElementById('presenter-view').classList.toggle('hidden', !isPresenter);
+            document.getElementById('participant-view').classList.toggle('hidden', isPresenter);
+            if (isPresenter) {
+                document.getElementById('create-session-form').classList.remove('hidden');
+                document.getElementById('results-view').classList.add('hidden');
+            }
         }
 
         function hostSession() {
@@ -269,21 +265,19 @@
         function broadcastUpdate() {
             updatePresenterCards();
             const updatePayload = { type: 'session-update', payload: sessionData };
-            guestConnections.forEach(conn => conn.send(updatePayload));
+            guestConnections.forEach(conn => {
+                if(conn.open) conn.send(updatePayload)
+            });
         }
 
         function updatePresenterCards() {
             const canvas = document.getElementById('card-canvas');
             const existingCardIds = sessionData.cards.map(c => c.id);
             
-            // Remove deleted cards
             Array.from(canvas.children).forEach(cardEl => {
-                if (!existingCardIds.includes(cardEl.id)) {
-                    canvas.removeChild(cardEl);
-                }
+                if (!existingCardIds.includes(cardEl.id)) canvas.removeChild(cardEl);
             });
 
-            // Add or update cards
             sessionData.cards.forEach(cardData => {
                 let cardEl = document.getElementById(cardData.id);
                 if (!cardEl) {
@@ -307,6 +301,7 @@
         }
 
         function deleteCard(cardId) {
+            event.stopPropagation();
             sessionData.cards = sessionData.cards.filter(c => c.id !== cardId);
             broadcastUpdate();
         }
@@ -318,7 +313,6 @@
             sessionData.cards.forEach(cardData => {
                 const cardEl = document.getElementById(cardData.id);
                 if (!cardEl) return;
-                
                 if (x + cardWidth + padding > canvas.offsetWidth) {
                     x = padding;
                     y = maxYInRow;
@@ -332,7 +326,8 @@
 
         function exportPDF() {
             const canvas = document.getElementById('card-canvas');
-            canvas.style.backgroundColor = 'white';
+            const originalBg = canvas.style.backgroundColor;
+            canvas.style.backgroundColor = '#f1f5f9';
             html2canvas(canvas, { scale: 2, useCORS: true, logging: false })
                 .then(cv => {
                     const imgData = cv.toDataURL('image/png');
@@ -340,7 +335,7 @@
                     pdf.addImage(imgData, 'PNG', 0, 0, cv.width, cv.height);
                     pdf.save(`${sessionData.question.replace(/ /g, '_') || 'muro'}.pdf`);
                 }).catch(err => alert(translations[currentLang].pdf_export_error))
-                  .finally(() => canvas.style.backgroundColor = '');
+                  .finally(() => canvas.style.backgroundColor = originalBg);
         }
 
         function joinSession() {
@@ -374,9 +369,7 @@
             const title = document.getElementById('card-title').value.trim();
             const body = document.getElementById('card-body').value.trim();
             if (!title || !body) { alert(translations[currentLang].alert_no_title_or_body); return; }
-
             hostConnection.send({ type: 'new-card', payload: { id: 'card-' + Date.now() + Math.random(), title, body, color: document.getElementById('card-color').value } });
-            
             participantState.submittedCards++;
             document.getElementById('card-title').value = '';
             document.getElementById('card-body').value = '';
@@ -396,10 +389,7 @@
                 document.getElementById('code-input').value = sessionId;
                 joinSession();
             } else {
-                switchView('presenter');
-                // Asumir presentador por defecto si no hay session ID
-                document.getElementById('presenter-view').classList.remove('hidden');
-                document.getElementById('participant-view').classList.add('hidden');
+                switchView('participant');
             }
             setLanguage('es');
 
@@ -418,7 +408,7 @@
                         if (card) {
                             card.position.x = parseFloat(event.target.getAttribute('data-x')) || 0;
                             card.position.y = parseFloat(event.target.getAttribute('data-y')) || 0;
-                            broadcastUpdate(); // CORRECCIÓN: Notifica a todos el cambio de posición
+                            broadcastUpdate();
                         }
                     }
                 }
