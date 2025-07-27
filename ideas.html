@@ -117,6 +117,28 @@
           padding: 0.5rem !important;
           border-radius: 0 !important;
         }
+
+        /* Botón de idea votada por el participante */
+        .voted-idea {
+          background-color: color-mix(in srgb, var(--theme-color-primary) 15%, white);
+          border-color: var(--theme-color-primary);
+        }
+
+        /* Insignia con el nº de votos que ha dado a esa idea */
+        .voted-badge {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 1.5rem;
+          height: 1.5rem;
+          border-radius: 9999px;
+          font-size: 0.75rem;
+          font-weight: 700;
+          background-color: var(--theme-color-primary);
+          color: var(--theme-color-text);
+          margin-left: 0.75rem;
+          padding: 0 0.4rem;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex flex-col items-center justify-start min-h-screen p-4 gap-6">
@@ -257,7 +279,7 @@
             ideas: [], // { id, text, votes }
             phase: 'submission' // 'submission' or 'voting'
         };
-        let participantState = { submittedIdeas: 0, castVotes: 0 };
+        let participantState = { submittedIdeas: 0, castVotes: 0, votes: {} }; // votes: { [ideaId]: count }
 
         // --- UI Logic ---
         function setLanguage(lang) {
@@ -461,12 +483,27 @@
                     const container = document.getElementById('ideas-to-vote-container');
                     container.innerHTML = '';
                     sessionData.ideas.forEach(idea => {
-                        const button = document.createElement('button');
-                        button.className = 'w-full text-left p-3 border rounded-lg hover:bg-gray-100';
-                        button.innerText = idea.text;
-                        button.onclick = () => castVote(idea.id);
-                        container.appendChild(button);
+                      const button = document.createElement('button');
+                      button.className = 'w-full p-3 border rounded-lg hover:bg-gray-100 flex items-center justify-between text-left';
+                      button.dataset.id = idea.id;
+                      button.innerHTML = `
+                        <span class="truncate mr-3">${idea.text}</span>
+                        <span class="voted-badge" style="display:none"></span>
+                      `;
+
+                      // Si ya ha votado esta idea, marcarla y mostrar contador
+                      const count = participantState.votes[idea.id] || 0;
+                      if (count > 0) {
+                        button.classList.add('voted-idea');
+                        const badge = button.querySelector('.voted-badge');
+                        badge.textContent = count;
+                        badge.style.display = 'inline-flex';
+                      }
+
+                      button.onclick = () => castVote(idea.id, button);
+                      container.appendChild(button);
                     });
+
                 } else {
                     document.getElementById('completed-view').classList.remove('hidden');
                 }
@@ -483,10 +520,32 @@
             setTimeout(updateParticipantView, 1500);
         }
 
-        function castVote(ideaId) {
-            hostConnection.send({ type: 'vote', payload: { ideaId } });
-            participantState.castVotes++;
-            updateParticipantView();
+        function markVoted(btn, count) {
+          if (!btn) return;
+          btn.classList.add('voted-idea');
+          const badge = btn.querySelector('.voted-badge');
+          if (badge) {
+            badge.textContent = count;
+            badge.style.display = 'inline-flex';
+          }
+        }
+
+        function castVote(ideaId, buttonEl) {
+          if (participantState.castVotes >= sessionData.votesPerPerson) return;
+
+          hostConnection.send({ type: 'vote', payload: { ideaId } });
+          participantState.castVotes++;
+          participantState.votes[ideaId] = (participantState.votes[ideaId] || 0) + 1;
+
+          markVoted(buttonEl, participantState.votes[ideaId]);
+
+          if (participantState.castVotes >= sessionData.votesPerPerson) {
+            setTimeout(updateParticipantView, 300); // Delay to show last vote
+          } else {
+            const votesLeft = sessionData.votesPerPerson - participantState.castVotes;
+            document.getElementById('votes-left').innerText =
+              translations[currentLang]['votes_left_text'].replace('{count}', votesLeft);
+          }
         }
         
         // --- Init & Helpers ---
@@ -520,7 +579,7 @@
                 document.getElementById('code-input').value = sessionId;
                 joinSession();
             } else {
-                switchView('presenter');
+                switchView('participant');
             }
             setLanguage(currentLang);
             document.getElementById('color-picker').addEventListener('input', (e) => applyTheme(e.target.value));
