@@ -21,7 +21,9 @@
             --theme-color-primary-border: #67e8f9;
             --theme-color-primary-dark-text: #164e63;
         }
-        body { font-family: 'Inter', sans-serif; }
+        html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
+        body { font-family: 'Inter', sans-serif; display: flex; flex-direction: column; }
+        #app { display: flex; flex-direction: column; flex-grow: 1; }
         .themed-bg { background-color: var(--theme-color-primary); color: var(--theme-color-text); }
         .themed-bg-hover:hover { filter: brightness(90%); transition: filter 0.2s; }
         .themed-content-bg { background-color: var(--theme-color-content-bg); }
@@ -46,7 +48,7 @@
             position: relative;
             width: 100%;
             height: 100%;
-            overflow: hidden;
+            overflow: auto; /* PERMITE SCROLLBARS */
             background-image: linear-gradient(45deg, #f1f5f9 25%, transparent 25%), 
                               linear-gradient(-45deg, #f1f5f9 25%, transparent 25%), 
                               linear-gradient(45deg, transparent 75%, #f1f5f9 75%), 
@@ -57,35 +59,21 @@
             touch-action: none;
         }
         .card {
-            position: absolute;
-            display: flex;
-            flex-direction: column;
-            min-width: 180px;
-            max-width: 300px;
+            position: absolute; display: flex; flex-direction: column;
+            width: 220px; /* Ancho fijo para consistencia */
             min-height: 100px;
             border-radius: 0.5rem;
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
             padding: 0.75rem;
-            cursor: grab;
-            transition: transform 0.3s ease, box-shadow 0.2s ease;
-            touch-action: none; /* Requerido por InteractJS */
-            box-sizing: border-box;
+            cursor: grab; transition: transform 0.3s ease, box-shadow 0.2s ease;
+            touch-action: none; box-sizing: border-box;
+            border: 1px solid rgba(0,0,0,0.1);
         }
         .card:active { cursor: grabbing; }
         .card.interact-dragging { box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1); z-index: 10; }
         
-        .card-header {
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            border-bottom: 1px solid rgba(0,0,0,0.1);
-            padding-bottom: 0.5rem;
-        }
-        .card-body {
-            flex-grow: 1;
-            font-size: 0.95rem;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-        }
+        .card-header { font-weight: 700; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(0,0,0,0.1); word-wrap: break-word; }
+        .card-body { flex-grow: 1; padding-top: 0.5rem; font-size: 0.95rem; word-wrap: break-word; }
         .delete-card-btn {
             position: absolute; top: -8px; right: -8px;
             background-color: #4b5563; color: white;
@@ -95,19 +83,23 @@
         }
         .card:hover .delete-card-btn { opacity: 1; }
 
-        /* Projection Mode */
-        body.projection-mode #card-canvas { border-radius: 0; }
+        /* Vistas y modo proyector */
+        #presenter-view { flex-grow: 1; display: flex; flex-direction: column; }
+        #results-view { flex-grow: 1; display: flex; flex-direction: column; padding: 1rem; }
+        #results-view-grid { flex-grow: 1; display: grid; grid-template-columns: 1fr; lg:grid-template-columns: repeat(3, 1fr); gap: 1rem; min-height: 0; }
+        #results-column { min-height: 0; }
+        
         body.projection-mode .hide-on-projection,
         body.projection-mode footer,
         body.projection-mode #lang-selector-container { display: none !important; }
-        body.projection-mode #app { max-width: 100%; width: 100%; height: 100vh; border-radius: 0; padding: 0; }
-        body.projection-mode #presenter-view { height: 100vh; display: flex; flex-direction: column; }
-        body.projection-mode #results-view { flex-grow: 1; padding: 0.5rem; border-radius: 0;}
+        body.projection-mode #app { padding: 0; }
+        body.projection-mode #results-view { padding: 0.5rem; }
+        body.projection-mode #card-canvas { border-radius: 0; }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800 flex flex-col items-center justify-center min-h-screen p-4">
+<body class="bg-gray-100 text-gray-800">
 
-    <div id="app" class="w-full max-w-5xl mx-auto rounded-xl shadow-lg transition-all duration-300 relative bg-white">
+    <div id="app" class="w-full max-w-7xl mx-auto bg-white shadow-lg">
         
         <div id="lang-selector-container" class="absolute top-4 right-4 z-20">
             <select id="lang-selector" onchange="setLanguage(this.value)" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2">
@@ -117,7 +109,7 @@
         </div>
 
         <div id="presenter-view" class="hidden">
-            <div id="create-session-form" class="themed-content-bg p-6 md:p-8 rounded-xl">
+            <div id="create-session-form" class="themed-content-bg p-6 md:p-8 rounded-xl m-auto">
                 <h2 class="text-2xl font-bold mb-6" data-translate-key="create_title">Crear un nuevo muro</h2>
                 <div class="space-y-4">
                     <div>
@@ -136,18 +128,18 @@
                  <p class="text-center mt-8"><a href="#" onclick="event.preventDefault(); switchView('participant')" class="text-sm text-gray-500 hover:text-cyan-600" data-translate-key="switch_to_participant">¿Buscas unirte a un muro? Haz clic aquí.</a></p>
             </div>
 
-            <div id="results-view" class="hidden p-4 h-full">
+            <div id="results-view" class="hidden">
                 <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4 hide-on-projection">
-                    <h2 id="results-question" class="text-2xl font-bold text-gray-800 text-center md:text-left"></h2>
+                    <h2 id="results-question" class="text-2xl font-bold text-gray-800 text-center md:text-left flex-shrink-0"></h2>
                     <div class="flex gap-2 flex-wrap justify-center">
                         <button onclick="autoArrangeCards()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-3 rounded-lg text-sm" data-translate-key="auto_arrange_btn">Auto-organizar</button>
                          <button onclick="exportPDF()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 rounded-lg text-sm" data-translate-key="export_pdf_btn">Exportar a PDF</button>
                         <button onclick="toggleProjectionMode()" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-3 rounded-lg text-sm" data-translate-key="projection_btn_text">Proyectar</button>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full">
+                <div id="results-view-grid" class="lg:grid-cols-3">
                     <div id="sharing-info-container" class="lg:col-span-1 space-y-4 hide-on-projection">
-                        <div class="bg-white p-4 rounded-lg text-center border">
+                       <div class="bg-white p-4 rounded-lg text-center border">
                            <h3 class="font-bold mb-2 text-gray-700" data-translate-key="scan_qr_label">1. Escanea el QR</h3>
                            <div id="qrcode-container" class="mx-auto max-w-[160px] bg-white p-2 rounded-lg"></div>
                        </div>
@@ -162,14 +154,14 @@
                            <span id="session-code"></span>
                        </div>
                     </div>
-                    <div class="lg:col-span-2 bg-gray-200 rounded-lg min-h-[500px] lg:min-h-0">
+                    <div id="results-column" class="lg:col-span-2 bg-gray-200 rounded-lg">
                         <div id="card-canvas"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div id="participant-view" class="hidden">
+        <div id="participant-view" class="hidden m-auto">
             <div id="join-session-form" class="bg-white p-8 rounded-xl">
                 <h2 class="text-2xl font-bold mb-4" data-translate-key="join_title">Unirse a un muro</h2>
                 <label for="code-input" class="block text-sm font-medium text-gray-700 mb-1" data-translate-key="session_code_label">Código del muro:</label>
@@ -208,62 +200,30 @@
         </div>
     </div>
     
-    <footer class="text-center py-4 text-sm text-gray-500">
+    <footer class="text-center py-2 text-sm text-gray-500 bg-gray-100 hide-on-projection">
         Aplicación creada por <a href="https://bilateria.org" target="_blank" class="underline hover:text-gray-700">Juan José de Haro</a>
     </footer>
 
     <script>
         const { jsPDF } = window.jspdf;
-        // --- Traducciones (i18n) ---
         const translations = {
-            'es': {
-                'create_title': 'Crear un nuevo muro de ideas', 'question_label': 'Título o pregunta del muro:',
-                'question_placeholder': 'Ej: ¿Qué hemos aprendido hoy?', 'cards_per_person_label': 'Tarjetas por persona:',
-                'start_session_btn': 'Iniciar Sesión', 'switch_to_participant': '¿Buscas unirte a un muro? Haz clic aquí.',
-                'auto_arrange_btn': 'Auto-organizar', 'export_pdf_btn': 'Exportar a PDF', 'projection_btn_text': 'Proyectar',
-                'scan_qr_label': '1. Escanea el QR', 'direct_link_label': '2. O comparte el enlace',
-                'or_go_to': 'O ve a', 'and_enter_code': 'e introduce el código:',
-                'join_title': 'Unirse a un muro', 'session_code_label': 'Código del muro:', 'join_btn': 'Unirse',
-                'switch_to_presenter': '¿Eres el presentador? Crea un muro aquí.',
-                'card_title_label': 'Título', 'card_body_label': 'Contenido', 'card_color_label': 'Color de la tarjeta',
-                'send_btn': 'Enviar Tarjeta', 'completed_title': '¡Gracias por participar!', 'completed_subtitle': 'Has enviado todas tus tarjetas.',
-                'cards_left_text': 'Puedes enviar {count} tarjeta(s) más.', 'card_sent_confirmation': '¡Tarjeta enviada!',
-                'alert_no_title_or_body': 'Por favor, escribe un título y un contenido para la tarjeta.',
-                'pdf_export_error': 'Error al exportar a PDF.'
-            },
-            'ca': {
-                'create_title': 'Crear un nou mur d\'idees', 'question_label': 'Títol o pregunta del mur:',
-                'question_placeholder': 'Ex: Què hem après avui?', 'cards_per_person_label': 'Targetes per persona:',
-                'start_session_btn': 'Iniciar Sessió', 'switch_to_participant': 'Busques unir-te a un mur? Fes clic aquí.',
-                'auto_arrange_btn': 'Autoorganitzar', 'export_pdf_btn': 'Exportar a PDF', 'projection_btn_text': 'Projectar',
-                'scan_qr_label': '1. Escaneja el QR', 'direct_link_label': '2. O comparteix l\'enllaç',
-                'or_go_to': 'O ves a', 'and_enter_code': 'i introdueix el codi:',
-                'join_title': 'Unir-se a un mur', 'session_code_label': 'Codi del mur:', 'join_btn': 'Unir-se',
-                'switch_to_presenter': 'Ets el presentador? Crea un mur aquí.',
-                'card_title_label': 'Títol', 'card_body_label': 'Contingut', 'card_color_label': 'Color de la targeta',
-                'send_btn': 'Enviar Targeta', 'completed_title': 'Gràcies per participar!', 'completed_subtitle': 'Has enviat totes les teves targetes.',
-                'cards_left_text': 'Pots enviar {count} targeta(es) més.', 'card_sent_confirmation': 'Targeta enviada!',
-                'alert_no_title_or_body': 'Si us plau, escriu un títol i un contingut per a la targeta.',
-                'pdf_export_error': 'Error en exportar a PDF.'
-            }
+            'es': { 'create_title': 'Crear un nuevo muro de ideas', 'question_label': 'Título o pregunta del muro:', 'question_placeholder': 'Ej: ¿Qué hemos aprendido hoy?', 'cards_per_person_label': 'Tarjetas por persona:', 'start_session_btn': 'Iniciar Sesión', 'switch_to_participant': '¿Buscas unirte a un muro? Haz clic aquí.', 'auto_arrange_btn': 'Auto-organizar', 'export_pdf_btn': 'Exportar a PDF', 'projection_btn_text': 'Proyectar', 'scan_qr_label': '1. Escanea el QR', 'direct_link_label': '2. O comparte el enlace', 'or_go_to': 'O ve a', 'and_enter_code': 'e introduce el código:', 'join_title': 'Unirse a un muro', 'session_code_label': 'Código del muro:', 'join_btn': 'Unirse', 'switch_to_presenter': '¿Eres el presentador? Crea un muro aquí.', 'card_title_label': 'Título', 'card_body_label': 'Contenido', 'card_color_label': 'Color de la tarjeta', 'send_btn': 'Enviar Tarjeta', 'completed_title': '¡Gracias por participar!', 'completed_subtitle': 'Has enviado todas tus tarjetas.', 'cards_left_text': 'Puedes enviar {count} tarjeta(s) más.', 'card_sent_confirmation': '¡Tarjeta enviada!', 'alert_no_title_or_body': 'Por favor, escribe un título y un contenido para la tarjeta.', 'pdf_export_error': 'Error al exportar a PDF.' },
+            'ca': { 'create_title': 'Crear un nou mur d\'idees', 'question_label': 'Títol o pregunta del mur:', 'question_placeholder': 'Ex: Què hem après avui?', 'cards_per_person_label': 'Targetes per persona:', 'start_session_btn': 'Iniciar Sessió', 'switch_to_participant': 'Busques unir-te a un mur? Fes clic aquí.', 'auto_arrange_btn': 'Autoorganitzar', 'export_pdf_btn': 'Exportar a PDF', 'projection_btn_text': 'Projectar', 'scan_qr_label': '1. Escaneja el QR', 'direct_link_label': '2. O comparteix l\'enllaç', 'or_go_to': 'O ves a', 'and_enter_code': 'i introdueix el codi:', 'join_title': 'Unir-se a un mur', 'session_code_label': 'Codi del mur:', 'join_btn': 'Unir-se', 'switch_to_presenter': 'Ets el presentador? Crea un mur aquí.', 'card_title_label': 'Títol', 'card_body_label': 'Contingut', 'card_color_label': 'Color de la targeta', 'send_btn': 'Enviar Targeta', 'completed_title': 'Gràcies per participar!', 'completed_subtitle': 'Has enviat totes les teves targetes.', 'cards_left_text': 'Pots enviar {count} targeta(es) més.', 'card_sent_confirmation': 'Targeta enviada!', 'alert_no_title_or_body': 'Si us plau, escriu un títol i un contingut per a la targeta.', 'pdf_export_error': 'Error en exportar a PDF.' }
         };
         let currentLang = 'es';
-
-        // --- Variables Globales ---
         let peer = null, hostConnection = null, guestConnections = [];
         let sessionData = { question: '', cardsPerPerson: 1, cards: [] };
         let participantState = { submittedCards: 0 };
 
-        // --- Lógica de UI ---
         function setLanguage(lang) {
             currentLang = lang;
             document.querySelectorAll('[data-translate-key]').forEach(el => {
                 const key = el.getAttribute('data-translate-key');
-                if (translations[lang] && translations[lang][key]) el.innerText = translations[lang][key];
+                if (translations[lang]?.[key]) el.innerText = translations[lang][key];
             });
             document.querySelectorAll('[data-translate-key-placeholder]').forEach(el => {
                 const key = el.getAttribute('data-translate-key-placeholder');
-                if (translations[lang] && translations[lang][key]) el.placeholder = translations[lang][key];
+                if (translations[lang]?.[key]) el.placeholder = translations[lang][key];
             });
         }
         function switchView(view) {
@@ -271,31 +231,24 @@
             document.getElementById('participant-view').classList.toggle('hidden', view !== 'participant');
         }
 
-        // --- Lógica del Presentador ---
         function hostSession() {
             sessionData.question = document.getElementById('question').value.trim() || 'Muro de Ideas';
             sessionData.cardsPerPerson = parseInt(document.getElementById('cards-per-person').value, 10);
             sessionData.cards = [];
-            
             document.getElementById('host-loader').classList.remove('hidden');
             document.getElementById('host-button').setAttribute('disabled', true);
-
-            const sessionId = Math.random().toString(36).substring(2, 8).toUpperCase();
-            peer = new Peer(sessionId);
-
+            peer = new Peer(Math.random().toString(36).substring(2, 8).toUpperCase());
             peer.on('open', id => {
                 document.getElementById('create-session-form').classList.add('hidden');
                 document.getElementById('results-view').classList.remove('hidden');
                 document.getElementById('results-question').innerText = sessionData.question;
-                
-                const baseUrl = window.location.href.split('?')[0].replace('padlet.html', 'ideas.html'); // Apunta a la URL base
+                const baseUrl = window.location.href.split('?')[0];
                 const sessionUrl = `${baseUrl}?session=${id}`;
                 document.getElementById('session-code').innerText = id;
                 document.getElementById('direct-session-link').innerText = sessionUrl;
                 document.getElementById('app-url').innerText = baseUrl.replace(/^https?:\/\//, '');
                 new QRCode(document.getElementById('qrcode-container'), { text: sessionUrl, width: 150, height: 150 });
             });
-
             peer.on('connection', conn => {
                 guestConnections.push(conn);
                 conn.on('open', () => conn.send({ type: 'session-data', payload: sessionData }));
@@ -307,46 +260,49 @@
         function handleGuestData(conn, data) {
             if (data.type === 'new-card') {
                 const canvas = document.getElementById('card-canvas');
-                data.payload.position = {
-                    x: Math.random() * (canvas.offsetWidth - 200),
-                    y: Math.random() * (canvas.offsetHeight - 150)
-                };
+                data.payload.position = { x: Math.random() * (canvas.offsetWidth - 220), y: Math.random() * (canvas.offsetHeight - 150) };
                 sessionData.cards.push(data.payload);
-            } else if (data.type === 'move-card') {
-                const card = sessionData.cards.find(c => c.id === data.payload.id);
-                if (card) { card.position = data.payload.position; }
-            } else if (data.type === 'delete-card') {
-                sessionData.cards = sessionData.cards.filter(c => c.id !== data.payload.id);
             }
             broadcastUpdate();
         }
 
         function broadcastUpdate() {
             updatePresenterCards();
-            guestConnections.forEach(conn => conn.send({ type: 'session-data', payload: sessionData }));
+            const updatePayload = { type: 'session-update', payload: sessionData };
+            guestConnections.forEach(conn => conn.send(updatePayload));
         }
 
         function updatePresenterCards() {
             const canvas = document.getElementById('card-canvas');
-            canvas.innerHTML = '';
+            const existingCardIds = sessionData.cards.map(c => c.id);
+            
+            // Remove deleted cards
+            Array.from(canvas.children).forEach(cardEl => {
+                if (!existingCardIds.includes(cardEl.id)) {
+                    canvas.removeChild(cardEl);
+                }
+            });
+
+            // Add or update cards
             sessionData.cards.forEach(cardData => {
-                const cardEl = document.createElement('div');
-                cardEl.className = 'card';
-                cardEl.id = cardData.id;
+                let cardEl = document.getElementById(cardData.id);
+                if (!cardEl) {
+                    cardEl = document.createElement('div');
+                    cardEl.className = 'card';
+                    cardEl.id = cardData.id;
+                    cardEl.innerHTML = `<div class="card-header"></div><div class="card-body"></div>
+                        <div class="delete-card-btn" onclick="deleteCard('${cardData.id}')">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/></svg>
+                        </div>`;
+                    canvas.appendChild(cardEl);
+                }
+                
+                cardEl.querySelector('.card-header').innerText = cardData.title;
+                cardEl.querySelector('.card-body').innerText = cardData.body;
                 cardEl.style.backgroundColor = cardData.color;
                 cardEl.style.transform = `translate(${cardData.position.x}px, ${cardData.position.y}px)`;
-                cardEl.dataset.x = cardData.position.x;
-                cardEl.dataset.y = cardData.position.y;
-
-                // Contenido de la tarjeta
-                cardEl.innerHTML = `
-                    <div class="card-header">${escapeHTML(cardData.title)}</div>
-                    <div class="card-body">${escapeHTML(cardData.body)}</div>
-                    <div class="delete-card-btn" onclick="deleteCard('${cardData.id}')">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/></svg>
-                    </div>
-                `;
-                canvas.appendChild(cardEl);
+                cardEl.setAttribute('data-x', cardData.position.x);
+                cardEl.setAttribute('data-y', cardData.position.y);
             });
         }
 
@@ -357,55 +313,36 @@
 
         function autoArrangeCards() {
             const canvas = document.getElementById('card-canvas');
-            const padding = 16;
-            let x = padding, y = padding, maxY = 0;
+            const padding = 16, cardWidth = 220;
+            let x = padding, y = padding, maxYInRow = 0;
             sessionData.cards.forEach(cardData => {
                 const cardEl = document.getElementById(cardData.id);
                 if (!cardEl) return;
                 
-                if (x + cardEl.offsetWidth + padding > canvas.offsetWidth) {
+                if (x + cardWidth + padding > canvas.offsetWidth) {
                     x = padding;
-                    y = maxY;
+                    y = maxYInRow;
                 }
                 cardData.position = { x, y };
-                x += cardEl.offsetWidth + padding;
-                maxY = Math.max(maxY, y + cardEl.offsetHeight + padding);
+                x += cardWidth + padding;
+                maxYInRow = Math.max(maxYInRow, y + cardEl.offsetHeight + padding);
             });
             broadcastUpdate();
         }
 
         function exportPDF() {
             const canvas = document.getElementById('card-canvas');
-            const quality = 2; // Aumentar calidad para mejor resolución
-            const originalBackgroundColor = canvas.style.backgroundColor;
-            canvas.style.backgroundColor = 'white'; // Fondo blanco para el PDF
-
-            html2canvas(canvas, {
-                scale: quality,
-                useCORS: true,
-                logging: false,
-                onclone: (doc) => {
-                  // Mantenemos los estilos de las tarjetas, pero eliminamos el fondo de puntos del canvas clonado
-                  doc.getElementById('card-canvas').style.backgroundImage = 'none';
-                }
-            }).then(cv => {
-                canvas.style.backgroundColor = originalBackgroundColor;
-                const imgData = cv.toDataURL('image/png');
-                const pdf = new jsPDF({
-                    orientation: cv.width > cv.height ? 'l' : 'p',
-                    unit: 'px',
-                    format: [cv.width, cv.height]
-                });
-                pdf.addImage(imgData, 'PNG', 0, 0, cv.width, cv.height);
-                pdf.save(`${sessionData.question.replace(/ /g, '_') || 'muro'}.pdf`);
-            }).catch(err => {
-                console.error("Error al exportar a PDF:", err);
-                alert(translations[currentLang].pdf_export_error);
-                canvas.style.backgroundColor = originalBackgroundColor;
-            });
+            canvas.style.backgroundColor = 'white';
+            html2canvas(canvas, { scale: 2, useCORS: true, logging: false })
+                .then(cv => {
+                    const imgData = cv.toDataURL('image/png');
+                    const pdf = new jsPDF({ orientation: cv.width > cv.height ? 'l' : 'p', unit: 'px', format: [cv.width, cv.height] });
+                    pdf.addImage(imgData, 'PNG', 0, 0, cv.width, cv.height);
+                    pdf.save(`${sessionData.question.replace(/ /g, '_') || 'muro'}.pdf`);
+                }).catch(err => alert(translations[currentLang].pdf_export_error))
+                  .finally(() => canvas.style.backgroundColor = '');
         }
 
-        // --- Lógica del Participante ---
         function joinSession() {
             const hostId = document.getElementById('code-input').value.trim().toUpperCase();
             if (!hostId) return;
@@ -413,7 +350,7 @@
             peer.on('open', () => {
                 hostConnection = peer.connect(hostId, { reliable: true });
                 hostConnection.on('data', data => {
-                    if (data.type === 'session-data') {
+                    if (data.type === 'session-data' || data.type === 'session-update') {
                         sessionData = data.payload;
                         showCardForm();
                     }
@@ -424,7 +361,6 @@
         function showCardForm() {
             document.getElementById('join-session-form').classList.add('hidden');
             const cardsLeft = sessionData.cardsPerPerson - participantState.submittedCards;
-
             if (cardsLeft > 0) {
                 document.getElementById('card-form').classList.remove('hidden');
                 document.getElementById('card-form-title').innerText = sessionData.question;
@@ -437,37 +373,21 @@
         function sendCard() {
             const title = document.getElementById('card-title').value.trim();
             const body = document.getElementById('card-body').value.trim();
-            const color = document.getElementById('card-color').value;
+            if (!title || !body) { alert(translations[currentLang].alert_no_title_or_body); return; }
 
-            if (!title || !body) {
-                alert(translations[currentLang].alert_no_title_or_body);
-                return;
-            }
-
-            hostConnection.send({ type: 'new-card', payload: { id: 'card-' + Date.now() + Math.random(), title, body, color } });
+            hostConnection.send({ type: 'new-card', payload: { id: 'card-' + Date.now() + Math.random(), title, body, color: document.getElementById('card-color').value } });
             
             participantState.submittedCards++;
             document.getElementById('card-title').value = '';
             document.getElementById('card-body').value = '';
-
             const infoEl = document.getElementById('participant-info');
             infoEl.innerText = translations[currentLang].card_sent_confirmation;
             setTimeout(() => { infoEl.innerText = ''; }, 2000);
-            
-            showCardForm(); // Actualizar vista (contador o vista finalizada)
+            showCardForm();
         }
-
-        // --- Inicialización y utilidades ---
-        function escapeHTML(str) {
-            const div = document.createElement('div');
-            div.appendChild(document.createTextNode(str));
-            return div.innerHTML;
-        }
-
-        function toggleProjectionMode() {
-            document.body.classList.toggle('projection-mode');
-        }
-
+        
+        function toggleProjectionMode() { document.body.classList.toggle('projection-mode'); }
+        
         window.onload = () => {
             const params = new URLSearchParams(window.location.search);
             const sessionId = params.get('session');
@@ -476,20 +396,14 @@
                 document.getElementById('code-input').value = sessionId;
                 joinSession();
             } else {
-                switchView('participant');
+                switchView('presenter');
+                // Asumir presentador por defecto si no hay session ID
+                document.getElementById('presenter-view').classList.remove('hidden');
+                document.getElementById('participant-view').classList.add('hidden');
             }
             setLanguage('es');
 
-            // Configurar InteractJS para arrastrar tarjetas
             interact('.card').draggable({
-                inertia: true,
-                modifiers: [
-                    interact.modifiers.restrictRect({
-                        restriction: 'parent',
-                        endOnly: true
-                    })
-                ],
-                autoScroll: true,
                 listeners: {
                     move(event) {
                         const target = event.target;
@@ -500,14 +414,12 @@
                         target.setAttribute('data-y', y);
                     },
                     end(event) {
-                        const target = event.target;
-                        hostConnection.send({ type: 'move-card', payload: {
-                            id: target.id,
-                            position: {
-                                x: parseFloat(target.getAttribute('data-x')) || 0,
-                                y: parseFloat(target.getAttribute('data-y')) || 0
-                            }
-                        }});
+                        const card = sessionData.cards.find(c => c.id === event.target.id);
+                        if (card) {
+                            card.position.x = parseFloat(event.target.getAttribute('data-x')) || 0;
+                            card.position.y = parseFloat(event.target.getAttribute('data-y')) || 0;
+                            broadcastUpdate(); // CORRECCIÓN: Notifica a todos el cambio de posición
+                        }
                     }
                 }
             });
