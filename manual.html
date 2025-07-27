@@ -38,25 +38,18 @@
             list-style-type: disc;
             padding-left: 0.5rem;
         }
-        .app-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-top: 2.5rem;
-            margin-bottom: 1rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 3px solid;
+        .tab-button {
+            transition: all 0.2s ease-in-out;
+            border-bottom: 3px solid transparent;
         }
-        .app-icon {
-            width: 3rem;
-            height: 3rem;
-            padding: 0.5rem;
-            border-radius: 0.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
+        .tab-button.active {
+            font-weight: 700;
         }
+        .tab-button.active.vota { border-color: #22c55e; color: #166534; }
+        .tab-button.active.nube { border-color: #f97316; color: #9a3412; }
+        .tab-button.active.ideas { border-color: #a855f7; color: #7e22ce; }
+        .tab-button.active.muro { border-color: #0891b2; color: #155e75; }
+        .tab-button.active.general { border-color: #3b82f6; color: #1e40af; }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -72,87 +65,91 @@
             </select>
         </div>
 
-        <article class="prose lg:prose-xl mx-auto bg-white p-8 sm:p-12 rounded-lg shadow-md">
-            <h1 id="main-title">Guía de Uso: Conexión en Directo</h1>
+        <article class="prose lg:prose-xl mx-auto bg-white rounded-lg shadow-md">
+            <div class="p-8 sm:p-12">
+                <h1 id="main-title">Guía de Uso: Conexión en Directo</h1>
 
-            <section id="general-aspects">
-                <h2 id="general-title">Aspectos Generales</h2>
-                <h3 id="general-how-it-works-title">¿Cómo funcionan estas aplicaciones?</h3>
-                <p id="general-how-it-works-p1">
-                    Todas las herramientas de "Conexión en Directo" se basan en la tecnología <strong>WebRTC (Peer-to-Peer)</strong>. Esto significa que la comunicación se establece directamente entre el dispositivo del presentador y los de los participantes, sin necesidad de un servidor intermedio que almacene datos. La información viaja de forma segura y desaparece en cuanto se cierra la sesión.
-                </p>
-                
-                <h3 id="general-roles-title">Roles de Usuario</h3>
-                <p id="general-roles-p1">En cada aplicación existen dos roles claros:</p>
-                <ul>
-                    <li id="general-roles-li1"><strong>Presentador:</strong> Es quien crea, configura y gestiona la actividad. Desde su pantalla controla la sesión y visualiza los resultados consolidados en tiempo real. Para crear una actividad, debe acceder a la aplicación y usar el enlace inferior ("¿Eres el presentador?").</li>
-                    <li id="general-roles-li2"><strong>Participante:</strong> Es quien se une a una sesión ya creada usando un código o enlace. Interactúa enviando sus respuestas (votos, palabras, ideas) desde su propio dispositivo.</li>
-                </ul>
-
-                <h3 id="general-connections-title">Consideraciones sobre el número de conexiones</h3>
-                <p id="general-connections-p1">
-                    Al ser una conexión directa, el rendimiento depende de dos factores clave: la <strong>potencia del ordenador y el ancho de banda de la red del presentador</strong>. Cada participante abre una conexión directa con el presentador, que debe gestionar todas simultáneamente.
-                </p>
-                <p id="general-connections-p2">
-                    Por este motivo, distinguimos dos tipos de aplicaciones:
-                </p>
-                 <ul>
-                    <li id="general-connections-li1"><strong>Conexiones Persistentes (Muro Interactivo):</strong> En esta aplicación, las conexiones se mantienen abiertas para ver cambios en tiempo real. Aquí, se recomienda un uso óptimo con grupos de hasta <strong>30-40 participantes</strong> para asegurar la fluidez.</li>
-                    <li id="general-connections-li2"><strong>Conexiones Breves (Votación, Nube, Lluvia de Ideas):</strong> En estas herramientas, la conexión se establece, envía el dato y se cierra en segundos. Esta eficiencia permite manejar un número mucho mayor de participantes, <strong>potencialmente varios cientos</strong>, ya que no se sobrecarga el dispositivo del presentador. Los navegadores son capaces de gestionar picos de decenas de conexiones nuevas por segundo, facilitando la participación masiva.</li>
-                </ul>
-            </section>
-
-            <section id="applications">
-                <h2 id="apps-title">Las Aplicaciones</h2>
-
-                <div id="app-vota">
-                    <div class="app-header" style="border-color: #22c55e;">
-                        <div class="app-icon bg-green-100 text-green-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-                        </div>
-                        <h3 id="app-vota-title" class="!mt-0 !mb-0 text-green-600">Votación Simple</h3>
-                    </div>
-                    <p id="app-vota-desc">
-                        Es una herramienta para lanzar preguntas de opción múltiple de forma rápida. El presentador define una pregunta y varias opciones de respuesta. Los participantes eligen una opción y los resultados se muestran instantáneamente como un gráfico de barras porcentual en la pantalla del presentador.
-                    </p>
+                <div class="border-b border-gray-200 mb-8">
+                    <nav class="-mb-px flex flex-wrap gap-x-6" aria-label="Tabs">
+                        <button onclick="showTab('general')" class="tab-button general active flex items-center gap-2 p-4 text-lg" data-translate-key="general-title">
+                            Aspectos Generales
+                        </button>
+                        <button onclick="showTab('vota')" class="tab-button vota flex items-center gap-2 p-4 text-lg" data-translate-key="app-vota-title">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                             Votación Simple
+                        </button>
+                         <button onclick="showTab('nube')" class="tab-button nube flex items-center gap-2 p-4 text-lg" data-translate-key="app-nube-title">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
+                             Nube de Palabras
+                        </button>
+                        <button onclick="showTab('ideas')" class="tab-button ideas flex items-center gap-2 p-4 text-lg" data-translate-key="app-ideas-title">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+                            Lluvia de Ideas
+                        </button>
+                        <button onclick="showTab('muro')" class="tab-button muro flex items-center gap-2 p-4 text-lg" data-translate-key="app-muro-title">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                            Muro Interactivo
+                        </button>
+                    </nav>
                 </div>
 
-                <div id="app-nube">
-                     <div class="app-header" style="border-color: #f97316;">
-                        <div class="app-icon bg-orange-100 text-orange-600">
-                             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
-                        </div>
-                        <h3 id="app-nube-title" class="!mt-0 !mb-0 text-orange-600">Nube de Palabras</h3>
-                    </div>
-                    <p id="app-nube-desc">
-                        Ideal para lluvias de ideas rápidas. Los participantes envían palabras o frases cortas en respuesta a una pregunta. Estas palabras forman una nube dinámica donde la frecuencia de cada término determina su tamaño. El resultado final se puede exportar como una imagen <strong>PNG</strong> o los datos brutos como una hoja de cálculo (<strong>CSV</strong>).
-                    </p>
-                </div>
+                <div id="tab-content">
+                    <section id="general" class="tab-pane active">
+                        <h2 id="general-title-content">Aspectos Generales</h2>
+                        <h3 id="general-how-it-works-title">¿Cómo funcionan estas aplicaciones?</h3>
+                        <p id="general-how-it-works-p1">
+                            Todas las herramientas de "Conexión en Directo" se basan en la tecnología <strong>WebRTC (Peer-to-Peer)</strong>. Esto significa que la comunicación se establece directamente entre el dispositivo del presentador y los de los participantes, sin necesidad de un servidor intermedio que almacene datos. La información viaja de forma segura y desaparece en cuanto se cierra la sesión.
+                        </p>
+                        
+                        <h3 id="general-roles-title">Roles de Usuario</h3>
+                        <p id="general-roles-p1">En cada aplicación existen dos roles claros:</p>
+                        <ul>
+                            <li id="general-roles-li1"><strong>Presentador:</strong> Es quien crea, configura y gestiona la actividad. Desde su pantalla controla la sesión y visualiza los resultados consolidados en tiempo real. Para crear una actividad, debe acceder a la aplicación y usar el enlace inferior ("¿Eres el presentador?").</li>
+                            <li id="general-roles-li2"><strong>Participante:</strong> Es quien se une a una sesión ya creada usando un código o enlace. Interactúa enviando sus respuestas (votos, palabras, ideas) desde su propio dispositivo.</li>
+                        </ul>
 
-                <div id="app-ideas">
-                     <div class="app-header" style="border-color: #a855f7;">
-                        <div class="app-icon bg-purple-100 text-purple-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
-                        </div>
-                        <h3 id="app-ideas-title" class="!mt-0 !mb-0 text-purple-600">Lluvia de Ideas y Votos</h3>
-                    </div>
-                    <p id="app-ideas-desc">
-                        Esta aplicación se desarrolla en dos fases. Primero, los participantes envían sus ideas o propuestas de forma anónima. Una vez finalizada la fase de propuestas, el presentador inicia la fase de votación, donde cada participante puede votar por un número determinado de ideas enviadas por los demás. Sirve para generar y priorizar ideas de forma colectiva.
-                    </p>
-                </div>
+                        <h3 id="general-connections-title">Consideraciones sobre el número de conexiones</h3>
+                        <p id="general-connections-p1">
+                            Al ser una conexión directa, el rendimiento depende de dos factores clave: la <strong>potencia del ordenador y el ancho de banda de la red del presentador</strong>. Cada participante abre una conexión directa con el presentador, que debe gestionar todas simultáneamente.
+                        </p>
+                        <p id="general-connections-p2">
+                            Por este motivo, distinguimos dos tipos de aplicaciones:
+                        </p>
+                         <ul>
+                            <li id="general-connections-li1"><strong>Conexiones Persistentes (Muro Interactivo):</strong> En esta aplicación, las conexiones se mantienen abiertas para ver cambios en tiempo real. Aquí, se recomienda un uso óptimo con grupos de hasta <strong>30-40 participantes</strong> para asegurar la fluidez.</li>
+                            <li id="general-connections-li2"><strong>Conexiones Breves (Votación, Nube, Lluvia de Ideas):</strong> En estas herramientas, la conexión se establece, envía el dato y se cierra en segundos. Esta eficiencia permite manejar un número mucho mayor de participantes, <strong>potencialmente varios cientos</strong>, ya que no se sobrecarga el dispositivo del presentador. Los navegadores son capaces de gestionar picos de decenas de conexiones nuevas por segundo, facilitando la participación masiva.</li>
+                        </ul>
+                    </section>
 
-                <div id="app-muro">
-                     <div class="app-header" style="border-color: #0891b2;">
-                        <div class="app-icon bg-cyan-100 text-cyan-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                        </div>
-                        <h3 id="app-muro-title" class="!mt-0 !mb-0 text-cyan-600">Muro Interactivo</h3>
-                    </div>
-                    <p id="app-muro-desc">
-                        Funciona como un corcho digital o una pizarra colaborativa. Los participantes envían "post-its" virtuales con un título y un texto. El presentador puede ver todas las notas en un lienzo infinito, moverlas, agruparlas y organizarlas libremente. Es importante recordar que el contenido del muro <strong>no es persistente</strong> y se pierde al cerrar la sesión, pero se puede exportar una captura como <strong>PDF</strong> o los datos como <strong>CSV</strong>.
-                    </p>
+                    <section id="vota" class="tab-pane hidden">
+                        <h2 id="app-vota-title-content" class="text-green-700">Votación Simple</h2>
+                        <p id="app-vota-desc">
+                            Es una herramienta para lanzar preguntas de opción múltiple de forma rápida. El presentador define una pregunta y varias opciones de respuesta. Los participantes eligen una opción y los resultados se muestran instantáneamente como un gráfico de barras porcentual en la pantalla del presentador.
+                        </p>
+                    </section>
+
+                    <section id="nube" class="tab-pane hidden">
+                        <h2 id="app-nube-title-content" class="text-orange-700">Nube de Palabras</h2>
+                        <p id="app-nube-desc">
+                            Ideal para lluvias de ideas rápidas. Los participantes envían palabras o frases cortas en respuesta a una pregunta. Estas palabras forman una nube dinámica donde la frecuencia de cada término determina su tamaño. El resultado final se puede exportar como una imagen <strong>PNG</strong> o los datos brutos como una hoja de cálculo (<strong>CSV</strong>).
+                        </p>
+                    </section>
+
+                    <section id="ideas" class="tab-pane hidden">
+                        <h2 id="app-ideas-title-content" class="text-purple-700">Lluvia de Ideas y Votos</h2>
+                        <p id="app-ideas-desc">
+                            Esta aplicación se desarrolla en dos fases. Primero, los participantes envían sus ideas o propuestas de forma anónima. Una vez finalizada la fase de propuestas, el presentador inicia la fase de votación, donde cada participante puede votar por un número determinado de ideas enviadas por los demás. Sirve para generar y priorizar ideas de forma colectiva.
+                        </p>
+                    </section>
+
+                    <section id="muro" class="tab-pane hidden">
+                        <h2 id="app-muro-title-content" class="text-cyan-700">Muro Interactivo</h2>
+                        <p id="app-muro-desc">
+                            Funciona como un corcho digital o una pizarra colaborativa. Los participantes envían "post-its" virtuales con un título y un texto. El presentador puede ver todas las notas en un lienzo infinito, moverlas, agruparlas y organizarlas libremente. Es importante recordar que el contenido del muro <strong>no es persistente</strong> y se pierde al cerrar la sesión, pero se puede exportar una captura como <strong>PDF</strong> o los datos como <strong>CSV</strong>.
+                        </p>
+                    </section>
                 </div>
-            </section>
+            </div>
         </article>
     </div>
 
@@ -172,7 +169,6 @@
                 'general-connections-p2': 'Por este motivo, distinguimos dos tipos de aplicaciones:',
                 'general-connections-li1': '<strong>Conexiones Persistentes (Muro Interactivo):</strong> En esta aplicación, las conexiones se mantienen abiertas para ver cambios en tiempo real. Aquí, se recomienda un uso óptimo con grupos de hasta <strong>30-40 participantes</strong> para asegurar la fluidez.',
                 'general-connections-li2': '<strong>Conexiones Breves (Votación, Nube, Lluvia de Ideas):</strong> En estas herramientas, la conexión se establece, envía el dato y se cierra en segundos. Esta eficiencia permite manejar un número mucho mayor de participantes, <strong>potencialmente varios cientos</strong>, ya que no se sobrecarga el dispositivo del presentador. Los navegadores son capaces de gestionar picos de decenas de conexiones nuevas por segundo, facilitando la participación masiva.',
-                'apps-title': 'Las Aplicaciones',
                 'app-vota-title': 'Votación Simple',
                 'app-vota-desc': 'Es una herramienta para lanzar preguntas de opción múltiple de forma rápida. El presentador define una pregunta y varias opciones de respuesta. Los participantes eligen una opción y los resultados se muestran instantáneamente como un gráfico de barras porcentual en la pantalla del presentador.',
                 'app-nube-title': 'Nube de Palabras',
@@ -196,7 +192,6 @@
                 'general-connections-p2': 'Per aquest motiu, distingim dos tipus d\'aplicacions:',
                 'general-connections-li1': '<strong>Connexions Persistents (Mur Interactiu):</strong> En aquesta aplicació, les connexions es mantenen obertes per veure canvis en temps real. Aquí, es recomana un ús òptim amb grups de fins a <strong>30-40 participants</strong> per assegurar la fluïdesa.',
                 'general-connections-li2': '<strong>Connexions Breus (Votació, Núvol, Pluja d\'Idees):</strong> En aquestes eines, la connexió s\'estableix, envia la dada i es tanca en segons. Aquesta eficiència permet gestionar un nombre molt més gran de participants, <strong>potencialment diversos centenars</strong>, ja que no se sobrecarrega el dispositiu del presentador. Els navegadors són capaços de gestionar pics de desenes de connexions noves per segon, facilitant la participació massiva.',
-                'apps-title': 'Les Aplicacions',
                 'app-vota-title': 'Votació Simple',
                 'app-vota-desc': 'És una eina per llançar preguntes d\'opció múltiple de forma ràpida. El presentador defineix una pregunta i diverses opcions de resposta. Els participants trien una opció i els resultats es mostren instantàniament com un gràfic de barres percentual a la pantalla del presentador.',
                 'app-nube-title': 'Núvol de Paraules',
@@ -220,7 +215,6 @@
                 'general-connections-p2': 'Por este motivo, distinguimos dous tipos de aplicacións:',
                 'general-connections-li1': '<strong>Conexións Persistentes (Muro Interactivo):</strong> Nesta aplicación, as conexións mantéñense abertas para ver cambios en tempo real. Aquí, recoméndase un uso óptimo con grupos de ata <strong>30-40 participantes</strong> para asegurar a fluidez.',
                 'general-connections-li2': '<strong>Conexións Breves (Votación, Nube, Chuvia de Ideas):</strong> Nestas ferramentas, a conexión establécese, envía o dato e péchase en segundos. Esta eficiencia permite manexar un número moito maior de participantes, <strong>potencialmente varios centos</strong>, xa que non se sobrecarga o dispositivo do presentador. Os navegadores son capaces de xestionar picos de decenas de conexións novas por segundo, facilitando a participación masiva.',
-                'apps-title': 'As Aplicacións',
                 'app-vota-title': 'Votación Simple',
                 'app-vota-desc': 'É unha ferramenta para lanzar preguntas de opción múltiple de forma rápida. O presentador define unha pregunta e varias opcións de resposta. Os participantes elixen unha opción e os resultados móstranse instantaneamente como un gráfico de barras porcentual na pantalla do presentador.',
                 'app-nube-title': 'Nube de Palabras',
@@ -244,7 +238,6 @@
                 'general-connections-p2': 'Hori dela eta, bi aplikazio mota bereizten ditugu:',
                 'general-connections-li1': '<strong>Konexio Iraunkorrak (Horma Interaktiboa):</strong> Aplikazio honetan, konexioak irekita mantentzen dira aldaketak denbora errealean ikusteko. Hemen, erabilera optimoa <strong>30-40 parte-hartzaile</strong> arteko taldeekin gomendatzen da, jariakortasuna bermatzeko.',
                 'general-connections-li2': '<strong>Konexio Laburrak (Bozketa, Hodeia, Ideia-jasa):</strong> Tresna hauetan, konexioa ezarri, datua bidali eta segundo gutxitan ixten da. Eraginkortasun honek parte-hartzaile kopuru askoz handiagoa kudeatzea ahalbidetzen du, <strong>potentzialki ehunka</strong>, aurkezlearen gailua gainkargatu gabe. Nabigatzaileek segundoko dozenaka konexio berriren gailurrak kudeatzeko gai dira, parte-hartze masiboa erraztuz.',
-                'apps-title': 'Aplikazioak',
                 'app-vota-title': 'Bozketa Sinplea',
                 'app-vota-desc': 'Aukera anitzeko galderak azkar egiteko tresna da. Aurkezleak galdera bat eta hainbat erantzun aukera definitzen ditu. Parte-hartzaileek aukera bat hautatzen dute eta emaitzak berehala erakusten dira aurkezlearen pantailan barra-diagrama portzentual gisa.',
                 'app-nube-title': 'Hitz Hodeia',
@@ -268,7 +261,6 @@
                 'general-connections-p2': 'For this reason, we distinguish between two types of applications:',
                 'general-connections-li1': '<strong>Persistent Connections (Interactive Wall):</strong> In this application, connections remain open to see real-time changes. Here, optimal use with groups of up to <strong>30-40 participants</strong> is recommended to ensure smoothness.',
                 'general-connections-li2': '<strong>Brief Connections (Voting, Word Cloud, Brainstorming):</strong> In these tools, the connection is established, sends the data, and closes in seconds. This efficiency allows for handling a much larger number of participants, <strong>potentially several hundred</strong>, as it does not overload the presenter\'s device. Browsers are capable of handling peaks of dozens of new connections per second, facilitating mass participation.',
-                'apps-title': 'The Applications',
                 'app-vota-title': 'Simple Voting',
                 'app-vota-desc': 'A tool for quickly launching multiple-choice questions. The presenter defines a question and several answer options. Participants choose an option, and the results are instantly displayed as a percentage bar chart on the presenter\'s screen.',
                 'app-nube-title': 'Word Cloud',
@@ -289,8 +281,34 @@
                 const element = document.getElementById(key);
                 if (element) {
                     element.innerHTML = translations[lang][key];
+                } else {
+                    const elements = document.querySelectorAll(`[data-translate-key="${key}"]`);
+                    elements.forEach(el => {
+                        // Preserve icon
+                        const icon = el.querySelector('svg');
+                        el.innerHTML = translations[lang][key];
+                        if (icon) el.prepend(icon);
+                    });
                 }
             });
+            // Also translate content titles
+             document.getElementById('general-title-content').innerHTML = translations[lang]['general-title'];
+             document.getElementById('app-vota-title-content').innerHTML = translations[lang]['app-vota-title'];
+             document.getElementById('app-nube-title-content').innerHTML = translations[lang]['app-nube-title'];
+             document.getElementById('app-ideas-title-content').innerHTML = translations[lang]['app-ideas-title'];
+             document.getElementById('app-muro-title-content').innerHTML = translations[lang]['app-muro-title'];
+        }
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-pane').forEach(pane => {
+                pane.classList.add('hidden');
+            });
+            document.getElementById(tabName).classList.remove('hidden');
+
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            document.querySelector(`.tab-button.${tabName}`).classList.add('active');
         }
 
         window.onload = () => {
@@ -300,6 +318,7 @@
             
             document.getElementById('lang-selector').value = langToSet;
             setLanguage(langToSet);
+            showTab('general');
         };
     </script>
 
