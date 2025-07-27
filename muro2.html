@@ -132,7 +132,7 @@
                        <div class="bg-white p-4 rounded-lg text-center border h-full flex flex-col justify-around">
                            <div>
                                <h3 class="font-bold mb-2 text-gray-700" data-translate-key="scan_qr_label"></h3>
-                               <div id="qrcode-container" class="mx-auto w-full p-2"></div>
+                               <div id="qrcode-container" class="mx-auto w-full p-2 flex justify-center"></div>
                            </div>
                            <div>
                                <h3 class="font-bold mt-4 mb-2 text-gray-700" data-translate-key="direct_link_label"></h3>
@@ -279,7 +279,7 @@
                 document.getElementById('app-url').innerText = baseUrl.replace(/^https?:\/\//, '');
                 
                 const qrContainer = document.getElementById('qrcode-container');
-                const size = qrContainer.offsetWidth * 0.8;
+                const size = qrContainer.offsetWidth * 0.75;
                 new QRCode(qrContainer, { text: sessionUrl, width: size, height: size });
             });
             peer.on('connection', conn => {
