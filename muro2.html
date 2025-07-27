@@ -132,7 +132,7 @@
                        <div class="bg-white p-4 rounded-lg text-center border h-full flex flex-col justify-around">
                            <div>
                                <h3 class="font-bold mb-2 text-gray-700" data-translate-key="scan_qr_label"></h3>
-                               <div id="qrcode-container" class="mx-auto w-full max-w-xs p-4 flex justify-center items-center"></div>
+                               <div id="qrcode-container" class="mx-auto max-w-[160px] bg-white p-2 rounded-lg"></div>
                            </div>
                            <div>
                                <h3 class="font-bold mt-4 mb-2 text-gray-700" data-translate-key="direct_link_label"></h3>
@@ -262,15 +262,7 @@
                 document.getElementById('session-code').innerText = id;
                 document.getElementById('direct-session-link').innerText = sessionUrl;
                 document.getElementById('app-url').innerText = baseUrl.replace(/^https?:\/\//, '');
-                
-                const qrContainer = document.getElementById('qrcode-container');
-                qrContainer.innerHTML = '';
-                const containerSize = qrContainer.clientWidth;
-                new QRCode(qrContainer, {
-                    text: sessionUrl,
-                    width: containerSize,
-                    height: containerSize,
-                });
+                new QRCode(document.getElementById('qrcode-container'), { text: sessionUrl, width: 200, height: 200 });
             });
             peer.on('connection', conn => {
                 guestConnections.push(conn);
@@ -282,10 +274,11 @@
         
         function handleGuestData(conn, data) {
             if (data.type === 'new-card') {
-                data.payload.position = { x: -sessionData.pan.x + 50, y: -sessionData.pan.y + 50 };
                 sessionData.cards.push(data.payload);
+                autoArrangeCards(); // Auto-organizar al recibir nueva tarjeta
+            } else {
+                broadcastUpdate();
             }
-            broadcastUpdate();
         }
 
         function broadcastUpdate() {
@@ -329,7 +322,7 @@
         function deleteCard(cardId) {
             event.stopPropagation();
             sessionData.cards = sessionData.cards.filter(c => c.id !== cardId);
-            broadcastUpdate();
+            autoArrangeCards(); // Re-organizar después de borrar
         }
 
         function autoArrangeCards() {
@@ -338,18 +331,23 @@
             let x = padding, y = padding, maxYInRow = 0;
 
             sessionData.cards.forEach(cardData => {
-                const cardEl = document.getElementById(cardData.id);
-                if (!cardEl) return; // Si la tarjeta no existe en el DOM, la saltamos
+                // Si la tarjeta aún no está en el DOM, su altura será desconocida.
+                // Usamos un valor por defecto o esperamos a que se renderice.
+                // Por simplicidad, usaremos un fallback, pero esto puede causar solapamientos
+                // si el contenido de la tarjeta la hace más alta que el fallback.
+                const cardEl = document.getElementById(cardData.id) || { offsetHeight: 120 };
 
-                if (x + cardWidth + padding > canvas.offsetWidth) {
-                    x = padding;
-                    y = maxYInRow;
+                if (x + cardWidth + padding > canvas.offsetWidth && x > padding) { // Si no cabe en la fila actual
+                    x = padding; // Volver al inicio de la fila
+                    y = maxYInRow; // Bajar a la siguiente fila
                 }
+                
                 cardData.position = { x, y };
-                x += cardWidth + padding;
-                maxYInRow = Math.max(maxYInRow, y + cardEl.offsetHeight + padding);
+                
+                x += cardWidth + padding; // Mover a la derecha para la siguiente tarjeta
+                maxYInRow = Math.max(maxYInRow, y + cardEl.offsetHeight + padding); // Actualizar la altura máxima de la fila
             });
-            sessionData.pan = {x: 0, y: 0};
+            sessionData.pan = {x: 0, y: 0}; // Resetear el paneo para que se vea la cuadrícula ordenada
             broadcastUpdate();
         }
 
@@ -454,6 +452,8 @@
                 window.removeEventListener('keydown', handleExitProjection);
                 document.getElementById('card-canvas').removeEventListener('click', handleExitProjection);
             }
+            // Re-organizar las tarjetas después de un breve retardo para permitir que el DOM se actualice
+            setTimeout(autoArrangeCards, 300);
         }
         
         window.onload = () => {
